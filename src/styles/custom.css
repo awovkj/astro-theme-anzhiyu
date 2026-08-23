@@ -1,0 +1,293 @@
+/* ============================================================
+ * 自定义：首页头图 + 打字机 + 全站字体（对齐 awovkj.github.io）
+ * ============================================================ */
+
+/* 首页 site-info 居中定位（原主题缺失） */
+#page-header #site-info {
+  position: absolute;
+  top: 43%;
+  padding: 0 10px;
+  width: 100%;
+}
+
+/* 头图透明，交给 pl-container 渐进加载层渲染 */
+#page-header {
+  background: transparent !important;
+}
+
+/* 首页头图渐进加载（blur → clear + scale 动画） */
+.pl-container {
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  position: fixed;
+  overflow: hidden;
+  will-change: transform;
+  animation: blur-to-clear 2s cubic-bezier(0.62, 0.21, 0.25, 1) 0s 1 normal backwards running,
+    scale 1.5s cubic-bezier(0.62, 0.21, 0.25, 1) 0s 1 both;
+}
+.pl-img {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 1s;
+}
+@keyframes blur-to-clear {
+  0% {
+    filter: blur(50px);
+    opacity: 1;
+  }
+  100% {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+@keyframes scale {
+  0% {
+    transform: scale(1.5) translateZ(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateZ(0);
+    opacity: 1;
+  }
+}
+.pl-visible {
+  opacity: 1;
+}
+.pl-blur {
+  filter: blur(50px);
+}
+
+/* 全站自定义字体 hhh（对齐 awovkj.github.io）
+ * 子集化：5.75MB TTF → 323KB WOFF2（覆盖全站文案字符集 1033 字）
+ * 生成命令见 scripts/subset-font.md；重跑前先收集新字符集 */
+@font-face {
+  font-family: "hhh";
+  font-display: swap;
+  src: url("/font/hhh-subset.woff2") format("woff2"),
+    url("/font/hhh-subset.woff") format("woff"),
+    url("/font/hhh-subset.ttf") format("truetype");
+}
+body {
+  font-family: hhh;
+}
+#site-title,
+#site-subtitle,
+#site-name,
+#aside-content .author-info__name,
+#aside-content .author-info__description {
+  font-family: hhh;
+}
+
+/* 代码块：figure.highlight 包裹 shiki pre 的适配 */
+#article-container figure.highlight pre.astro-code {
+  margin: 0;
+  padding: 8px 0;
+  border: none;
+}
+#article-container figure.highlight pre.astro-code code {
+  display: block;
+  padding: 0 20px;
+}
+
+/* ============================================================
+ * 代码块美化：catppuccin 双主题配色 + 圆角/阴影/滚动条
+ * ============================================================ */
+#article-container figure.highlight {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--anzhiyu-shadow-border);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+#article-container figure.highlight:hover {
+  border: var(--style-border-hover);
+  box-shadow: var(--anzhiyu-shadow-main);
+}
+#article-container figure.highlight pre.astro-code {
+  padding: 14px 0;
+  line-height: 1.8;
+  tab-size: 4;
+  transition: background-color 0.3s;
+}
+#article-container figure.highlight pre.astro-code:focus {
+  outline: none;
+}
+#article-container figure.highlight pre.astro-code ::selection {
+  background: rgba(66, 90, 239, 0.25);
+}
+
+/* 横向滚动条美化 */
+#article-container figure.highlight pre.astro-code::-webkit-scrollbar {
+  height: 6px;
+}
+#article-container figure.highlight pre.astro-code::-webkit-scrollbar-track {
+  background: transparent;
+}
+#article-container figure.highlight pre.astro-code::-webkit-scrollbar-thumb {
+  background: var(--hlscrollbar-bg);
+  border-radius: 3px;
+}
+#article-container figure.highlight pre.astro-code::-webkit-scrollbar-thumb:hover {
+  background: var(--anzhiyu-main);
+}
+
+/* 深色模式：切换到 shiki dark 主题变量（catppuccin-mocha） */
+html[data-theme="dark"] #article-container .astro-code,
+html[data-theme="dark"] #article-container .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+/* ============================================================
+ * 文章顶部波浪效果（对齐 awovkj.github.io，dynamicEffect.postTopWave）
+ * ============================================================ */
+.main-hero-waves-area {
+  width: 100%;
+  position: absolute;
+  left: 0;
+  bottom: -11px;
+  z-index: 5;
+  pointer-events: none;
+}
+.waves-area .waves-svg {
+  width: 100%;
+  height: 3.75rem;
+}
+.parallax > use {
+  -webkit-animation: move-forever 25s cubic-bezier(0.55, 0.5, 0.45, 0.5) infinite;
+  -moz-animation: move-forever 25s cubic-bezier(0.55, 0.5, 0.45, 0.5) infinite;
+  -o-animation: move-forever 25s cubic-bezier(0.55, 0.5, 0.45, 0.5) infinite;
+  -ms-animation: move-forever 25s cubic-bezier(0.55, 0.5, 0.45, 0.5) infinite;
+  animation: move-forever 25s cubic-bezier(0.55, 0.5, 0.45, 0.5) infinite;
+  will-change: transform;
+}
+.parallax > use:nth-child(1) {
+  -webkit-animation-delay: -2s;
+  -moz-animation-delay: -2s;
+  -o-animation-delay: -2s;
+  -ms-animation-delay: -2s;
+  animation-delay: -2s;
+  -webkit-animation-duration: 7s;
+  -moz-animation-duration: 7s;
+  -o-animation-duration: 7s;
+  -ms-animation-duration: 7s;
+  animation-duration: 7s;
+  fill: rgba(247, 249, 254, 0.741);
+}
+.parallax > use:nth-child(2) {
+  -webkit-animation-delay: -3s;
+  -moz-animation-delay: -3s;
+  -o-animation-delay: -3s;
+  -ms-animation-delay: -3s;
+  animation-delay: -3s;
+  -webkit-animation-duration: 10s;
+  -moz-animation-duration: 10s;
+  -o-animation-duration: 10s;
+  -ms-animation-duration: 10s;
+  animation-duration: 10s;
+  fill: rgba(247, 249, 254, 0.51);
+}
+.parallax > use:nth-child(3) {
+  -webkit-animation-delay: -4s;
+  -moz-animation-delay: -4s;
+  -o-animation-delay: -4s;
+  -ms-animation-delay: -4s;
+  animation-delay: -4s;
+  -webkit-animation-duration: 13s;
+  -moz-animation-duration: 13s;
+  -o-animation-duration: 13s;
+  -ms-animation-duration: 13s;
+  animation-duration: 13s;
+  fill: rgba(247, 249, 254, 0.212);
+}
+.parallax > use:nth-child(4) {
+  -webkit-animation-delay: -5s;
+  -moz-animation-delay: -5s;
+  -o-animation-delay: -5s;
+  -ms-animation-delay: -5s;
+  animation-delay: -5s;
+  -webkit-animation-duration: 20s;
+  -moz-animation-duration: 20s;
+  -o-animation-duration: 20s;
+  -ms-animation-duration: 20s;
+  animation-duration: 20s;
+  fill: #f7f9fe;
+}
+[data-theme="dark"] .parallax > use:nth-child(1) {
+  fill: rgba(24, 23, 29, 0.784);
+}
+[data-theme="dark"] .parallax > use:nth-child(2) {
+  fill: rgba(24, 23, 29, 0.502);
+}
+[data-theme="dark"] .parallax > use:nth-child(3) {
+  fill: rgba(24, 23, 29, 0.243);
+}
+[data-theme="dark"] .parallax > use:nth-child(4) {
+  fill: #000;
+}
+@-webkit-keyframes move-forever {
+  0% {
+    -webkit-transform: translate3d(-90px, 0, 0);
+    transform: translate3d(-90px, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(85px, 0, 0);
+    transform: translate3d(85px, 0, 0);
+  }
+}
+@-moz-keyframes move-forever {
+  0% {
+    -moz-transform: translate3d(-90px, 0, 0);
+    transform: translate3d(-90px, 0, 0);
+  }
+  100% {
+    -moz-transform: translate3d(85px, 0, 0);
+    transform: translate3d(85px, 0, 0);
+  }
+}
+@-o-keyframes move-forever {
+  0% {
+    -o-transform: translate3d(-90px, 0, 0);
+    transform: translate3d(-90px, 0, 0);
+  }
+  100% {
+    -o-transform: translate3d(85px, 0, 0);
+    transform: translate3d(85px, 0, 0);
+  }
+}
+@keyframes move-forever {
+  0% {
+    -webkit-transform: translate3d(-90px, 0, 0);
+    -moz-transform: translate3d(-90px, 0, 0);
+    -o-transform: translate3d(-90px, 0, 0);
+    -ms-transform: translate3d(-90px, 0, 0);
+    transform: translate3d(-90px, 0, 0);
+  }
+  100% {
+    -webkit-transform: translate3d(85px, 0, 0);
+    -moz-transform: translate3d(85px, 0, 0);
+    -o-transform: translate3d(85px, 0, 0);
+    -ms-transform: translate3d(85px, 0, 0);
+    transform: translate3d(85px, 0, 0);
+  }
+}
+@media screen and (max-width: 768px) {
+  .waves-area .waves-svg {
+    height: 40px;
+    min-height: 40px;
+  }
+  .main-hero-waves-area {
+    display: none;
+    visibility: hidden;
+  }
+}
+
+

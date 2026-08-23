@@ -1,0 +1,43 @@
+# 友情链接数据
+# 结构对照原主题 layout/includes/page/flink.pug 与 scripts/tag/flink.js
+# site.data.link 为数组，每个元素是一个分组 (class_name)
+# flink_style: anzhiyu | telescopic | flexcard （缺省按 anzhiyu 渲染）
+- class_name: 小伙伴
+  class_desc: 欢迎交换友链，可以在留言板找我～
+  flink_style: anzhiyu
+  link_list:
+    - name: 安知鱼
+      link: https://blog.anheyu.com/
+      avatar: https://bu.dusays.com/2022/12/28/63ac3a73e7524.png
+      descr: 一个收集热情与分享欲的地方
+      tag: 推荐
+      color: vip
+      recommend: true
+    - name: 张洪Heo
+      link: https://blog.zhanghehe.cn/
+      avatar: https://bu.dusays.com/2022/12/28/63ac3a6c0b4be.png
+      descr: 分享设计与开发的故事
+      tag: 速联
+      color: speed
+    - name: Akilar
+      link: https://akilar.top/
+      avatar: https://bu.dusays.com/2022/12/28/63ac3a73e7524.png
+      descr: 雨水落下来的声音，是星球呼吸的韵律
+    - name: 小冰
+      link: https://zfe.space/
+      avatar: https://bu.dusays.com/2022/12/28/63ac3a6c0b4be.png
+      descr: 不惹眼，不闹腾，也不勉强
+- class_name: 站点收藏
+  class_desc: 一些值得收藏的优质站点
+  flink_style: flexcard
+  link_list:
+    - name: Astro 官网
+      link: https://astro.build/
+      avatar: https://astro.build/assets/brand/assets/webtouchicon-dark.svg
+      descr: 现代化静态站点生成框架
+      siteshot: https://image.thum.io/get/width/400/crop/800/allowJPG/wait/20/noanimate/https://astro.build/
+    - name: Hexo
+      link: https://hexo.io/
+      avatar: https://hexo.io/icon/favicon-196.png
+      descr: 快速、简洁且高效的博客框架
+      siteshot: https://image.thum.io/get/width/400/crop/800/allowJPG/wait/20/noanimate/https://hexo.io/

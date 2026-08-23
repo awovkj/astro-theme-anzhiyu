@@ -1,0 +1,132 @@
+---
+import { theme } from "../lib/theme";
+import { url_for, sort_attr_post, strip_html } from "../lib/helpers";
+import type { PostItem } from "../lib/collections";
+
+interface Props {
+  posts: PostItem[];
+  tags?: { name: string; length: number }[];
+}
+const { posts } = Astro.props;
+const t = theme as any;
+const homeTop = t.home_top || {};
+if (!homeTop.enable) {
+  // render nothing on the server if disabled
+}
+const { title, subTitle, siteText } = homeTop;
+const categories = homeTop.category || [];
+const swiperEnable = !!(homeTop.swiper && homeTop.swiper.enable);
+const banner = homeTop.banner || {};
+const peoplecanvas = t.peoplecanvas && t.peoplecanvas.enable ? t.peoplecanvas : null;
+const topGroup = sort_attr_post("top_group_list", posts).slice(0, swiperEnable ? 4 : 6);
+const indexContentLen = (t.index_post_content as number) || 200;
+---
+
+{homeTop.enable && (
+  <div id="home_top">
+    <div class="swiper_container_card" style="height:auto;width:100%">
+      <div id="bannerGroup">
+        <div id="random-banner">
+          {peoplecanvas ? (
+            <canvas id="peoplecanvas" style="width:100%;height:100%"></canvas>
+          ) : (
+            <div class="banners-title">
+              <div class="banners-title-big">{title}</div>
+              <div class="banners-title-big">{subTitle}</div>
+              <div class="banners-title-small">{siteText}</div>
+            </div>
+          )}
+          <a id="random-hover" href="javascript:toRandomPost()">
+            <i class="anzhiyufont anzhiyu-icon-paper-plane"></i>
+            <div class="bannerText">随便逛逛<i class="anzhiyufont anzhiyu-icon-arrow-right"></i></div>
+          </a>
+        </div>
+        <div class="categoryGroup">
+          {categories.map((item: any) => (
+            <div class="categoryItem" style={`box-shadow:${item.shadow || ""}`}>
+              <a class={`categoryButton ${item.class || ""}`.trim()} href={url_for(item.path)}>
+                <span class="categoryButtonText">{item.name}</span>
+                {item.icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${item.icon}`}></i>}
+              </a>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {swiperEnable ? (
+        <div id="swiper_container_blog">
+          <div id="swiper_container" class="blog-slider swiper-container-fade swiper-container-horizontal">
+            <div class="blog-slider__wrp swiper-wrapper">
+              {sort_attr_post("swiper_list", posts).map((item) => (
+                <div class="blog-slider__item swiper-slide">
+                  <a class="blog-slider__img" href={url_for(item.path)} title={item.title}>
+                    <img width="48" height="48" src={String(item.cover || "")} alt="图片" />
+                  </a>
+                  <div class="blog-slider__content">
+                    <span class="blog-slider__code">{item.date.toISOString().slice(0, 10)}</span>
+                    {(() => {
+                      const content = strip_html(item.content || "");
+                      let expert = content.substring(0, indexContentLen);
+                      if (content.length > indexContentLen) expert += " ...";
+                      return (
+                        <>
+                          <a class="blog-slider__title" href={url_for(item.path)} alt={item.title}>{item.title}</a>
+                          <div class="blog-slider__text">{item.description || expert}</div>
+                        </>
+                      );
+                    })()}
+                    <a class="blog-slider__button" href={url_for(item.path)} alt={item.title}>详情</a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div id="topPostGroup">
+            {topGroup.map((item) => (
+              <div class="top-group-list-item">
+                <div class="post_cover left_radius">
+                  <a href={url_for(item.path)} title={item.title}><span class="top-group-text">荐</span><img class="post_bg" alt={item.title} src={String(item.cover || "")} /></a>
+                </div>
+                <div class="top-group-info"><a class="article-title" href={url_for(item.path)} title={item.title}>{item.title}</a></div>
+              </div>
+            ))}
+            <div class="top-group-list-none"></div>
+            <div class="top-group-list-none"></div>
+            <div class="top-group-list-none"></div>
+          </div>
+        </div>
+      ) : (
+        <div class="topGroup">
+          {topGroup.map((item) => (
+            <div class="recent-post-item">
+              <div class="post_cover left_radius">
+                <a href={url_for(item.path)} title={item.title}><span class="recent-post-top-text">荐</span><img class="post_bg" alt="cover" src={String(item.cover || "")} /></a>
+              </div>
+              <div class="recent-post-info"><a class="article-title" href={url_for(item.path)} title={item.title}>{item.title}</a></div>
+            </div>
+          ))}
+          <a id="todayCard" class="todayCard" href={url_for(banner.link || "/")} style="z-index:1;">
+            <div class="todayCard-info">
+              <div class="todayCard-tips">{banner.tips}</div>
+              <div class="todayCard-title">{banner.title}</div>
+            </div>
+            <img class="todayCard-cover" src={url_for(banner.image || "")} alt="封面" />
+            <div class="banner-button-group">
+              <div class="banner-button" onclick="event.stopPropagation();event.preventDefault();anzhiyu.hideTodayCard();">
+                <i class="anzhiyufont anzhiyu-icon-arrow-circle-right"></i>
+                <span class="banner-button-text">更多推荐</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+{homeTop.enable && peoplecanvas && (
+  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+)}
+{homeTop.enable && peoplecanvas && (
+  <script is:inline defer src="/js/anzhiyu/people.js"></script>
+)}

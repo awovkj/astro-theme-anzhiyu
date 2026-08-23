@@ -1,0 +1,27 @@
+# 构建产物
+dist/
+.astro/
+
+# 依赖
+node_modules/
+
+# 日志
+*.log
+astro-dev.log
+preview.log
+
+# 临时文件
+*.tmp
+.subset-chars.txt
+theme.csso.css
+
+# 原始字体（子集化源文件，5.75MB，按需手动放置）
+public/font/hhh.ttf
+
+# 环境变量
+.env
+.env.*
+
+# 编辑器
+.vscode/
+.idea/

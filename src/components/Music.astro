@@ -1,0 +1,23 @@
+---
+import { theme } from "../lib/theme";
+const t = theme as any;
+const navMusic = t.nav_music || {};
+---
+
+{navMusic.enable && (
+  <div id="nav-music">
+    <a id="nav-music-hoverTips" onclick="anzhiyu.musicToggle()" accesskey="m">播放音乐</a>
+    <div id="console-music-bg"></div>
+    <meting-js
+      id={navMusic.id}
+      server={navMusic.server}
+      type="playlist"
+      mutex="true"
+      preload="none"
+      theme="var(--anzhiyu-main)"
+      data-lrctype="0"
+      order="random"
+      volume={navMusic.volume}
+    ></meting-js>
+  </div>
+)}

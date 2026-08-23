@@ -1,0 +1,83 @@
+---
+import { theme } from "../lib/theme";
+import { site } from "../lib/site";
+import { _p } from "../lib/i18n";
+import { globalConfig, globalConfigSite } from "../lib/globalConfig";
+
+interface Props {
+  title: string;
+  pageTitle?: string;
+  keywords?: string;
+  description?: string;
+  isPost?: boolean;
+  isHome?: boolean;
+  showToc?: boolean;
+  postUpdate?: string;
+}
+const {
+  title,
+  pageTitle = title,
+  keywords,
+  description = site.description,
+  isPost = false,
+  isHome = false,
+  showToc = false,
+  postUpdate = "",
+} = Astro.props;
+
+const t = theme as any;
+const themeColorLight = (t.theme_color && t.theme_color.enable && t.theme_color.meta_theme_color_light) || "#ffffff";
+const themeColorDark = (t.theme_color && t.theme_color.enable && t.theme_color.meta_theme_color_dark) || "#0d0d0d";
+const themeColor = t.display_mode === "dark" ? themeColorDark : themeColorLight;
+
+const pageKeywords = keywords || (Array.isArray((site as any).keywords) ? (site as any).keywords.join(",") : "");
+const pageAuthor = site.email ? `${site.author},${site.email}` : site.author;
+const pageCopyright = (site as any).copyright || site.author;
+
+const GLOBAL_CONFIG = globalConfig();
+const GLOBAL_CONFIG_SITE = globalConfigSite({ title: site.title, pageTitle, isPost, isHome, showToc, postUpdate });
+
+// Icon font (anzhiyu iconfont). Prefer the config value; fall back to the
+// official anzhiyu static CDN so icons render out of the box.
+const iconfontCss =
+(t.asset && t.asset.ali_iconfont_css) || "https://cdn.jsdelivr.net/npm/anzhiyu-theme-static@1.0.9/icon/ali_iconfont_css.css";
+---
+
+<meta charset="UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>{pageTitle}</title>
+{keywords && <meta name="keywords" content={pageKeywords} />}
+<meta name="author" content={pageAuthor} />
+<meta name="copyright" content={pageCopyright} />
+<meta name="format-detection" content="telephone=no" />
+<meta name="theme-color" content={themeColor} />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-touch-fullscreen" content="yes" />
+<meta name="apple-mobile-web-app-title" content={pageTitle} />
+<meta name="application-name" content={pageTitle} />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content={themeColor} />
+
+<!-- Open Graph -->
+<meta property="og:type" content={isPost ? "article" : "website"} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:url" content={site.url} />
+{description && <meta property="og:description" content={description} />}
+<meta property="og:site_name" content={site.title} />
+
+<link rel="canonical" href={site.url} />
+<link rel="icon" href={site.favicon} />
+
+<link rel="preconnect" href="https://cdn.cbd.int" />
+<link rel="stylesheet" href={iconfontCss} media="print" onload="this.media='all'" />
+{(t.icons && t.icons.fontawesome) && (
+  <link rel="stylesheet" href={t.icons.fontawesome} media="print" onload="this.media='all'" />
+)}
+
+<script is:inline define:vars={{ GLOBAL_CONFIG }}>
+  window.GLOBAL_CONFIG = GLOBAL_CONFIG;
+</script>
+<script is:inline define:vars={{ GLOBAL_CONFIG_SITE }}>
+  window.GLOBAL_CONFIG_SITE = GLOBAL_CONFIG_SITE;
+</script>

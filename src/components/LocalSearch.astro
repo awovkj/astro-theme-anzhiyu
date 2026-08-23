@@ -1,0 +1,166 @@
+---
+import { theme } from "../lib/theme";
+import { _p } from "../lib/i18n";
+
+const t = theme as any;
+const enabled = !!(t.local_search && t.local_search.enable);
+const hitsEmpty = _p("search.local_search.hits_empty");
+const inputPlaceholder = _p("search.local_search.input_placeholder");
+const searchTitle = _p("search.title");
+const loadDataText = _p("search.load_data");
+---
+{enabled && (
+  <div id="local-search">
+    <div class="search-dialog">
+      <nav class="search-nav">
+        <span class="search-dialog-title">{searchTitle}</span>
+        <span id="loading-status"></span>
+        <button class="search-close-button">
+          <i class="anzhiyufont anzhiyu-icon-xmark"></i>
+        </button>
+      </nav>
+
+      <div id="loading-database" class="is-center">
+        <i class="anzhiyufont anzhiyu-icon-spinner anzhiyu-pulse-icon"></i>
+        <span>{`  ${loadDataText}`}</span>
+      </div>
+
+      <div class="search-wrap">
+        <div id="local-search-input">
+          <div class="local-search-box">
+            <input class="local-search-box--input" type="text" placeholder={inputPlaceholder} />
+          </div>
+        </div>
+        <hr />
+        <div id="local-search-results" data-empty={hitsEmpty}></div>
+      </div>
+    </div>
+
+    <div id="search-mask"></div>
+
+    <style is:global>{`
+      .search-dialog {
+        position: fixed;
+        top: 5rem;
+        left: 50%;
+        z-index: 1001;
+        display: none;
+        margin-left: -18.75rem;
+        padding: 1.25rem;
+        width: 37.5rem;
+        border-radius: 12px;
+        background: var(--anzhiyu-card-bg);
+        box-shadow: var(--anzhiyu-shadow-lightblack);
+        border: var(--style-border);
+        transition: 0.3s;
+      }
+      .search-dialog hr {
+        margin: 20px auto;
+      }
+      .search-dialog .search-nav {
+        margin: 0 0 14px;
+        color: var(--anzhiyu-main, #425AEF);
+        font-size: 1.4em;
+        line-height: 1;
+      }
+      .search-dialog .search-nav .search-dialog-title {
+        margin-right: 10px;
+      }
+      .search-dialog .search-nav .search-close-button {
+        float: right;
+        color: #858585;
+        transition: color 0.2s ease-in-out;
+        cursor: pointer;
+        border: none;
+        background: none;
+        padding: 0;
+      }
+      .search-dialog .search-nav .search-close-button:hover {
+        color: var(--anzhiyu-main, #425AEF);
+      }
+      #search-mask {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        background: rgba(0, 0, 0, 0.6);
+      }
+      #local-search .search-dialog .local-search-box {
+        margin: 0 auto;
+        max-width: 100%;
+        width: 100%;
+      }
+      #local-search .search-dialog .local-search-box input {
+        padding: 5px 14px;
+        width: 100%;
+        box-sizing: border-box;
+        outline: none;
+        border: 2px solid var(--anzhiyu-main, #425AEF);
+        border-radius: 40px;
+        background: var(--search-bg, #f6f8fa);
+        color: var(--search-input-color, #4C4948);
+        -webkit-appearance: none;
+      }
+      #local-search .search-dialog .search-wrap {
+        display: none;
+      }
+      #local-search .search-dialog .local-search__hit-item .search-keyword {
+        color: #F47466;
+        font-weight: bold;
+      }
+      #local-search .search-dialog .search-result-list {
+        overflow-y: auto;
+        max-height: calc(80vh - 130px);
+      }
+      #local-search .search-dialog .local-search__hit-item a {
+        display: block;
+        color: var(--search-result-title, #4C4948);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      #local-search .search-dialog .local-search__hit-item a:hover {
+        color: var(--anzhiyu-main, #425AEF);
+      }
+      #local-search .search-dialog .local-search__hit-item .search-result {
+        margin: 0 8px 8px 0;
+        word-break: break-all;
+      }
+      @media screen and (max-width: 768px) {
+        .search-dialog {
+          top: 0;
+          left: 0;
+          margin: 0;
+          width: 100%;
+          height: 100%;
+          border-radius: 0 !important;
+        }
+        #local-search .search-dialog .search-result-list {
+          padding-bottom: 40px;
+          max-height: 75vh !important;
+        }
+      }
+      @media screen and (max-height: 680px) {
+        .search-dialog {
+          top: 2rem;
+        }
+      }
+      @media screen and (max-height: 580px) {
+        .search-dialog {
+          top: 0;
+          left: 0;
+          margin: 0;
+          width: 100%;
+          height: 100%;
+          border-radius: 0 !important;
+        }
+      }
+    `}</style>
+
+    <script>
+      import "../scripts/local-search.ts";
+    </script>
+  </div>
+)}

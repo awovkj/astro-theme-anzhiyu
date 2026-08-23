@@ -1,0 +1,368 @@
+---
+import { theme } from "../lib/theme";
+import { site } from "../lib/site";
+import { _p } from "../lib/i18n";
+import { url_for, date, date_xml, fullDate, wordcount, min2read, aside_archives } from "../lib/helpers";
+import { loadData, sortedPosts } from "../lib/collections";
+import type { PostItem } from "../lib/collections";
+
+interface Props {
+  isHome?: boolean;
+  isPost?: boolean;
+  title?: string;
+  topImg?: string | false;
+  subtitle?: string;
+  post?: PostItem;
+  content?: string;
+}
+const { isHome = false, isPost = false, title = site.title, topImg = false, subtitle = site.subtitle, post, content = "" } = Astro.props;
+
+const t = theme as any;
+const isHomeClass = topImg === false ? "not-top-img" : isPost ? "post-bg" : isHome ? "full_page" : "not-home-page";
+const homeImg = topImg && topImg.indexOf("/") !== -1 ? url_for(topImg) : topImg || "";
+
+// ---- menu items ----
+type MenuItem = { label: string; link: string; icon?: string; anima?: string; child?: MenuItem[] };
+const menu: MenuItem[] = [];
+if (t.menu && typeof t.menu === "object") {
+  for (const [label, value] of Object.entries(t.menu)) {
+    if (typeof value === "string") {
+      const parts = value.split("||").map((s: string) => s.trim());
+      menu.push({ label, link: parts[0], icon: parts[1], anima: parts[2] || "faa-tada" });
+    } else if (typeof value === "object") {
+      const child: MenuItem[] = [];
+      for (const [lab, val] of Object.entries(value as Record<string, string>)) {
+        const parts = val.split("||").map((s: string) => s.trim());
+        child.push({ label: lab, link: parts[0], icon: parts[1], anima: parts[2] || "faa-tada" });
+      }
+      const lp = label.split("||").map((s: string) => s.trim());
+      menu.push({ label: lp[0], icon: lp[1], anima: lp[2] || "faa-tada", child });
+    }
+  }
+}
+function iconEl(icon?: string, anima = "faa-tada") {
+  if (!icon) return null;
+  if (icon.startsWith("fa")) return { cls: `${icon} ${anima}` };
+  if (icon.startsWith("icon")) return { svg: icon, cls: anima };
+  if (icon.startsWith("anzhiyu")) return { anzhiyu: icon, cls: anima };
+  return null;
+}
+
+const navMenu = (t.nav && t.nav.menu) || [];
+const social = t.social || {};
+const enableSearch = !!(t.algolia_search?.enable || t.local_search?.enable || t.docsearch?.enable);
+const wordcountEnable = !!(t.wordcount && t.wordcount.enable && (t.wordcount.post_wordcount || t.wordcount.min2read));
+
+// ---- console panel data (mirrors the original theme's console in #nav-right) ----
+const consoleEnable = !!t.console?.enable;
+const rewardEnable = !!(t.reward && t.reward.enable && Array.isArray(t.reward.QR_code));
+const qrCodes = rewardEnable ? (t.reward.QR_code as { img: string; link?: string; text: string }[]) : [];
+const consoleData = await loadData();
+const consolePosts = sortedPosts(consoleData.posts);
+const consoleArchives = aside_archives(consolePosts, { type: "monthly", order: -1, limit: 6 });
+const consoleTags = (consoleData.tags || []).slice(0, 24);
+---
+
+<header id="page-header" class={isHomeClass} style={homeImg ? `background: url(${homeImg}) top / cover no-repeat` : ""}>
+  <nav id="nav">
+    <div id="nav-group">
+      <span id="blog_name">
+        {t.nav && t.nav.enable && (
+          <div class="back-home-button" role="button" tabindex="0" aria-label="打开站点导航" aria-expanded="false">
+            <i class="anzhiyufont anzhiyu-icon-grip-vertical"></i>
+            <div class="back-menu-list-groups">
+              {navMenu.map((group: any) => (
+                <div class="back-menu-list-group">
+                  <div class="back-menu-list-title">{group.title}</div>
+                  <div class="back-menu-list">
+                    {group.item?.map((item: any) => (
+                      <a class="back-menu-item" href={url_for(item.link)} title={item.name}>
+                        <img class="back-menu-item-icon" src={item.icon} alt={item.name} />
+                        <span class="back-menu-item-text">{item.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <a id="site-name" href={url_for("/")} accesskey="h">
+          <div class="title">{site.title}</div>
+          <i class="anzhiyufont anzhiyu-icon-house-chimney"></i>
+        </a>
+      </span>
+
+      <div class="mask-name-container">
+        <div id="name-container">
+          <a id="page-name" href="#page-header" aria-label="返回页面顶部">{title}</a>
+        </div>
+      </div>
+
+      <div id="menus">
+        <div class="menus_items">
+          {menu.map((m) => (
+            <div class="menus_item">
+              {m.child ? (
+                <a class="site-page menu-parent" href={url_for(m.child[0]?.link || "/")} aria-haspopup="true" aria-expanded="false">
+                  {m.icon && iconEl(m.icon, m.anima)?.anzhiyu && (
+                    <i class={`anzhiyufont ${m.icon} ${m.anima}`} style="font-size:0.9em;"></i>
+                  )}
+                  <span>{m.label}</span>
+                </a>
+              ) : (
+                <a class="site-page faa-parent animated-hover" href={url_for(m.link)}>
+                  {m.icon && iconEl(m.icon, m.anima)?.anzhiyu && (
+                    <i class={`anzhiyufont ${m.icon} ${m.anima}`} style="font-size:0.9em;"></i>
+                  )}
+                  <span>{m.label}</span>
+                </a>
+              )}
+              {m.child && (
+                <ul class="menus_item_child">
+                  {m.child.map((c) => (
+                    <li>
+                      <a class="site-page child faa-parent animated-hover" href={url_for(c.link)}>
+                        {c.icon && iconEl(c.icon, c.anima)?.anzhiyu && (
+                          <i class={`anzhiyufont ${c.icon} ${c.anima}`} style="font-size:0.9em;"></i>
+                        )}
+                        <span>{c.label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div id="nav-right">
+        {enableSearch && (
+          <div class="nav-button" id="search-button">
+            <a class="site-page social-icon search" href="#search" title={_p("nav.search")} accesskey="s" aria-label={_p("nav.search")}>
+              <i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i>
+              <span>{_p("search.title")}</span>
+            </a>
+          </div>
+        )}
+        <div class="nav-button" id="randomPost_button">
+          <a class="site-page" onclick="anzhiyu.toRandomPost()" title={_p("随便逛逛")} href="javascript:void(0);">
+            <i class="anzhiyufont anzhiyu-icon-dice"></i>
+          </a>
+        </div>
+        {consoleEnable && (
+          <>
+            <input id="center-console" type="checkbox" />
+            <label class="widget" for="center-console" title={_p("控制台")} onclick="anzhiyu.switchConsole();">
+              <i class="left"></i><i class="widget center"></i><i class="widget right"></i>
+            </label>
+            <div id="console">
+              {rewardEnable && (
+                <div class="console-card-group-reward">
+                  <ul class="reward-all console-card">
+                    {qrCodes.map((q) => (
+                      <li class="reward-item">
+                        <a href={q.link || q.img} target="_blank">
+                          <img class="post-qr-code-img" alt={q.text} src={q.img} loading="lazy" />
+                        </a>
+                        <div class="post-qr-code-desc">{q.text}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div class="console-card-group">
+                <div class="console-card-group-left">
+                  <div class="console-card" id="card-newest-comments">
+                    <div class="card-content">
+                      <div class="author-content-item-tips">{_p("互动")}</div>
+                      <span class="author-content-item-title"> {_p("最新评论")}</span>
+                    </div>
+                    <div class="aside-list">
+                      <span>{_p("暂无评论")}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="console-card-group-right">
+                  <div class="console-card tags">
+                    <div class="card-content">
+                      <div class="author-content-item-tips">{_p("兴趣")}</div>
+                      <span class="author-content-item-title">{_p("寻找你感兴趣的领域")}</span>
+                    </div>
+                    {consoleTags.length > 0 && (
+                      <div class="card-tag-cloud">
+                        {consoleTags.map((tg) => (
+                          <a href={url_for(`tags/${encodeURIComponent(tg.name)}/`)}>
+                            {tg.name}<sup>{tg.length}</sup>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div class="console-card history">
+                    <div class="card-archives" set:html={consoleArchives} />
+                    <hr />
+                  </div>
+                </div>
+              </div>
+              <div class="button-group">
+                <div class="console-btn-item">
+                  <a class="darkmode_switchbutton" title={_p("切换显示模式")} href="javascript:void(0);">
+                    <i class="anzhiyufont anzhiyu-icon-moon"></i>
+                  </a>
+                </div>
+                <div class="console-btn-item" id="consoleHideAside" onclick="anzhiyu.hideAsideBtn()" title={_p("切换侧栏显示")}>
+                  <a class="asideSwitch"><i class="anzhiyufont anzhiyu-icon-arrows-left-right"></i></a>
+                </div>
+                <div class="console-btn-item" id="consoleMusic" onclick="anzhiyu.musicToggle()" title={_p("切换音乐")}>
+                  <a class="music-switch"><i class="anzhiyufont anzhiyu-icon-music"></i></a>
+                </div>
+              </div>
+              <div class="console-mask" onclick="anzhiyu.hideConsole()"></div>
+            </div>
+          </>
+        )}
+        <div class="nav-button" id="nav-totop">
+          <a class="totopbtn" href="#page-header" aria-label="返回页面顶部">
+            <i class="anzhiyufont anzhiyu-icon-arrow-up"></i>
+            <span id="percent">0</span>
+          </a>
+        </div>
+        <div id="toggle-menu">
+          <a class="site-page" href="#sidebar" title={_p("nav.toggle_menu")} aria-label={_p("nav.toggle_menu")} aria-expanded="false">
+            <i class="anzhiyufont anzhiyu-icon-bars"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  {topImg !== false && (
+    <>
+      {isPost && post ? (
+        <>
+          <div id="post-info">
+            <div id="post-firstinfo">
+              <div class="meta-firstline">
+                <a class="post-meta-original">原创</a>
+                {post.categories.length > 0 && (
+                  <span class="post-meta-categories">
+                    <i class="anzhiyufont anzhiyu-icon-inbox post-meta-icon"></i>
+                    {post.categories.map((c, i) => (
+                      <span>
+                        <a href={url_for(`categories/${encodeURIComponent(c)}/`)} class="post-meta-categories">{c}</a>
+                        {i < post.categories.length - 1 && <i class="anzhiyufont anzhiyu-icon-angle-right post-meta-separator"></i>}
+                      </span>
+                    ))}
+                  </span>
+                )}
+                {post.tags.length > 0 && (
+                  <span class="article-meta tags">
+                    {post.tags.map((tg) => (
+                      <a href={url_for(`tags/${encodeURIComponent(tg)}/`)} tabindex="-1" class="article-meta__tags">
+                        <span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>{tg}</span>
+                      </a>
+                    ))}
+                  </span>
+                )}
+              </div>
+            </div>
+            <h1 class="post-title" itemprop="name headline">{post.title}</h1>
+            <div id="post-meta">
+              <div class="meta-firstline">
+                <span class="post-meta-date">
+                  <i class="anzhiyufont anzhiyu-icon-calendar-days post-meta-icon"></i>
+                  <span class="post-meta-label">{_p("post.created")}</span>
+                  <time class="post-meta-date-created" itemprop="dateCreated datePublished" datetime={date_xml(post.date)} title={_p("post.created") + " " + fullDate(post.date)}>
+                    {date(post.date, (site as any).date_format || "YYYY-MM-DD")}
+                  </time>
+                  <span class="post-meta-separator"></span>
+                  <i class="anzhiyufont anzhiyu-icon-history post-meta-icon"></i>
+                  <span class="post-meta-label">{_p("post.updated")}</span>
+                  <time class="post-meta-date-updated" datetime={date_xml(post.updated || post.date)} title={_p("post.updated") + " " + fullDate(post.updated || post.date)}>
+                    {date(post.updated || post.date, (site as any).date_format || "YYYY-MM-DD")}
+                  </time>
+                </span>
+              </div>
+              <div class="meta-secondline">
+                {wordcountEnable && (
+                  <>
+                    <span class="post-meta-separator"></span>
+                    <span class="post-meta-wordcount">
+                      {t.wordcount?.post_wordcount && (
+                        <>
+                          <i class="anzhiyufont anzhiyu-icon-file-word post-meta-icon" title="文章字数"></i>
+                          <span class="post-meta-label" title="文章字数">{_p("post.wordcount") + ":"}</span>
+                          <span class="word-count" title="文章字数">{wordcount(content)}</span>
+                          {t.wordcount?.min2read && <span class="post-meta-separator"></span>}
+                        </>
+                      )}
+                      {t.wordcount?.min2read && (
+                        <>
+                          <i class="anzhiyufont anzhiyu-icon-clock post-meta-icon" title="阅读时长"></i>
+                          <span class="post-meta-label" title="阅读时长">{_p("post.min2read") + ":"}</span>
+                          <span>{min2read(content, { cn: 350, en: 160 }) + _p("post.min2read_unit")}</span>
+                        </>
+                      )}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          <div id="post-top-cover">
+            <img id="post-top-bg" class="nolazyload" src={homeImg} alt={post.title} />
+          </div>
+          {t.dynamicEffect?.postTopWave && (
+            <section class="main-hero-waves-area waves-area" aria-hidden="true">
+              <svg class="waves-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+                <defs>
+                  <path id="gentle-wave" d="M -160 44 c 30 0 58 -18 88 -18 s 58 18 88 18 s 58 -18 88 -18 s 58 18 88 18 v 44 h -352 Z"></path>
+                </defs>
+                <g class="parallax">
+                  <use href="#gentle-wave" x="48" y="0"></use>
+                  <use href="#gentle-wave" x="48" y="3"></use>
+                  <use href="#gentle-wave" x="48" y="5"></use>
+                  <use href="#gentle-wave" x="48" y="7"></use>
+                </g>
+              </svg>
+            </section>
+          )}
+        </>
+      ) : isHome ? (
+        <div id="site-info">
+          {t.subtitle?.enable ? (
+            <h1 id="site-title"><span id="subtitle">{t.subtitle.effect ? "" : (t.subtitle.sub && t.subtitle.sub[0]) || subtitle}</span></h1>
+          ) : (
+            <h1 id="site-title">{title}</h1>
+          )}
+          {social && Object.keys(social).length > 0 && (
+            <div id="site_social_icons">
+              {Object.entries(social).map(([title, value]) => {
+                const v = String(value);
+                const parts = v.split("||").map((s) => s.trim());
+                const link = parts[0];
+                const icon = parts[1];
+                return (
+                  <a class="social-icon faa-parent animated-hover" href={url_for(link)} target="_blank" title={title}>
+                    {icon && icon.startsWith("anzhiyu") && <i class={`anzhiyufont ${icon}`}></i>}
+                  </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div id="page-site-info">
+          <h1 id="site-title">{title}</h1>
+        </div>
+      )}
+      {isHome && (
+        <div id="scroll-down" onclick="anzhiyu.scrollToDest(window.innerHeight, 500)">
+          <i class="anzhiyufont anzhiyu-icon-angle-down scroll-down-effects"></i>
+        </div>
+      )}
+    </>
+  )}
+</header>

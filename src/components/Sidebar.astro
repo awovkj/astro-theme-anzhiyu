@@ -1,0 +1,138 @@
+---
+import { theme } from "../lib/theme";
+import { site } from "../lib/site";
+import { _p } from "../lib/i18n";
+import { url_for, cloudTags } from "../lib/helpers";
+import type { TagInfo } from "../lib/collections";
+
+interface Props {
+  postsCount: number;
+  tagsCount: number;
+  categoriesCount: number;
+  tags: TagInfo[];
+}
+const { postsCount, tagsCount, categoriesCount, tags } = Astro.props;
+const t = theme as any;
+
+type MenuItem = { label: string; link: string; icon?: string; child?: MenuItem[] };
+const menu: MenuItem[] = [];
+if (t.menu && typeof t.menu === "object") {
+  for (const [label, value] of Object.entries(t.menu)) {
+    if (typeof value === "string") {
+      const parts = value.split("||").map((s: string) => s.trim());
+      menu.push({ label, link: parts[0], icon: parts[1] });
+    } else if (typeof value === "object") {
+      const child: MenuItem[] = [];
+      for (const [lab, val] of Object.entries(value as Record<string, string>)) {
+        const parts = val.split("||").map((s: string) => s.trim());
+        child.push({ label: lab, link: parts[0], icon: parts[1] });
+      }
+      const lp = label.split("||").map((s: string) => s.trim());
+      menu.push({ label: lp[0], icon: lp[1], child });
+    }
+  }
+}
+const navMenu = (t.nav && t.nav.menu) || [];
+const tagCloud = cloudTags({ source: tags, minfontsize: 0.875, maxfontsize: 0.875, limit: (t.aside?.card_tags?.limit === 0 ? 0 : t.aside?.card_tags?.limit) || 40, unit: "rem", color: !!t.aside?.card_tags?.color, highlightTags: t.aside?.card_tags?.highlightTags || [] });
+---
+
+<div id="sidebar">
+  <div id="menu-mask"></div>
+  <div id="sidebar-menus">
+    {t.sidebar?.site_data && (
+      <div class="sidebar-site-data site-data is-center">
+        {t.sidebar.site_data.archive && (
+          <a href={url_for(site.archive_dir) + "/"} title="archive">
+            <div class="headline">{_p("aside.articles")}</div>
+            <div class="length-num">{postsCount}</div>
+          </a>
+        )}
+        {t.sidebar.site_data.tag && (
+          <a href={url_for(site.tag_dir) + "/"} title="tag">
+            <div class="headline">{_p("aside.tags")}</div>
+            <div class="length-num">{tagsCount}</div>
+          </a>
+        )}
+        {t.sidebar.site_data.category && (
+          <a href={url_for(site.category_dir) + "/"} title="category">
+            <div class="headline">{_p("aside.categories")}</div>
+            <div class="length-num">{categoriesCount}</div>
+          </a>
+        )}
+      </div>
+    )}
+
+    {t.sidebar?.display_mode && (
+      <>
+        <span class="sidebar-menu-item-title">{_p("aside.function")}</span>
+        <div class="sidebar-menu-item">
+          <a class="darkmode_switchbutton menu-child" href="javascript:void(0);" title={_p("aside.display_mode")}>
+            <i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i>
+            <span>{_p("aside.display_mode")}</span>
+          </a>
+        </div>
+      </>
+    )}
+
+    {t.sidebar?.nav_menu_project && (
+      <div class="back-menu-list-groups">
+        {navMenu.map((group: any) => (
+          <div class="back-menu-list-group">
+            <div class="back-menu-list-title">{group.title}</div>
+            <div class="back-menu-list">
+              {group.item?.map((item: any) => (
+                <a class="back-menu-item" href={url_for(item.link)} title={item.name}>
+                  <img class="back-menu-item-icon" src={item.icon} alt={item.name} />
+                  <span class="back-menu-item-text">{item.name}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {t.sidebar?.menus_items && (
+      <div class="menus_items">
+        {menu.map((m) => (
+          <div class="menus_item">
+            {m.child ? (
+              <a class="site-page" href="javascript:void(0);">
+                {m.icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${m.icon}`} style="font-size:0.9em;"></i>}
+                <span>{m.label}</span>
+              </a>
+            ) : (
+              <a class="site-page" href={url_for(m.link)}>
+                {m.icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${m.icon}`} style="font-size:0.9em;"></i>}
+                <span>{m.label}</span>
+              </a>
+            )}
+            {m.child && (
+              <ul class="menus_item_child">
+                {m.child.map((c) => (
+                  <li>
+                    <a class="site-page child" href={url_for(c.link)}>
+                      {c.icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${c.icon}`} style="font-size:0.9em;"></i>}
+                      <span>{c.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    )}
+
+    {t.sidebar?.tags_cloud && (
+      <>
+        <span class="sidebar-menu-item-title">标签</span>
+        {tags.length > 0 && (
+          <div class="card-tags">
+            <div class="card-tag-cloud" set:html={tagCloud} />
+          </div>
+        )}
+      </>
+    )}
+  </div>
+</div>

@@ -1,0 +1,17 @@
+---
+import { theme } from "../lib/theme";
+import { site } from "../lib/site";
+import { url_for } from "../lib/helpers";
+const t = theme as any;
+const enabled = !!(t.preloader && t.preloader.enable);
+const loadingImg = (t.preloader && t.preloader.avatar) || (t.avatar && t.avatar.img) || site.avatar;
+---
+
+{enabled && (
+  <div id="loading-box" onclick="document.getElementById('loading-box').classList.add('loaded')">
+    <div class="loading-bg">
+      <img class="loading-img" alt="加载头像" src={url_for(loadingImg)} />
+      <div class="loading-image-dot"></div>
+    </div>
+  </div>
+)}

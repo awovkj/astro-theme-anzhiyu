@@ -1,0 +1,15 @@
+---
+import Base from "../../layouts/Base.astro";
+import { loadData } from "../../lib/collections";
+import { tags_page_list } from "../../lib/helpers";
+
+const data = await loadData();
+const html = tags_page_list(data.tags);
+---
+
+<Base title="标签" pageTitle="标签" aside={false}>
+  <div id="tags-page" class="tags-page">
+    <div class="tags-page-title">标签</div>
+    <div class="tags-list" set:html={html} />
+  </div>
+</Base>

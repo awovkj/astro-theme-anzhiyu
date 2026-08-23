@@ -1,0 +1,41 @@
+---
+import Base from "../../layouts/Base.astro";
+import Pagination from "../../components/Pagination.astro";
+import { loadData, sortedPosts } from "../../lib/collections";
+import { url_for, date, date_xml, fullDate } from "../../lib/helpers";
+import { site } from "../../lib/site";
+
+export async function getStaticPaths() {
+  const data = await loadData();
+  return data.tags.map((tag) => ({ params: { tag: encodeURIComponent(tag.name) }, props: { name: tag.name } }));
+}
+
+const { name } = Astro.props;
+const data = await loadData();
+const all = sortedPosts(data.posts).filter((p) => p.tags.includes(name));
+const perPage = (site as any).index_per_page || 10;
+const total = Math.max(1, Math.ceil(all.length / perPage));
+const posts = all.slice(0, perPage);
+const dateFmt = (site as any).date_format || "YYYY-MM-DD";
+const base = `/tags/${encodeURIComponent(name)}/`;
+---
+
+<Base title={`标签: ${name}`} pageTitle={`标签: ${name}`} aside={false}>
+  <div id="tag-page" class="article-sort">
+    <div class="article-sort-title">标签 - {name}</div>
+    {posts.map((p) => (
+      <div class="article-sort-item">
+        <a class="article-sort-item-img" href={url_for(p.path)}>
+          {p.cover && <img src={url_for(String(p.cover))} alt={p.title} />}
+        </a>
+        <div class="article-sort-item-info">
+          <div class="article-sort-item-time">
+            <time datetime={date_xml(p.date)} title={fullDate(p.date)}>{date(p.date, dateFmt)}</time>
+          </div>
+          <a class="article-sort-item-title" href={url_for(p.path)} title={p.title}>{p.title}</a>
+        </div>
+      </div>
+    ))}
+    <Pagination current={1} total={total} base={base} />
+  </div>
+</Base>

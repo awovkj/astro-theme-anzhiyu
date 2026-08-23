@@ -1,0 +1,146 @@
+---
+import Base from "../layouts/Base.astro";
+import { getEssayList, type EssayItem } from "../lib/pageData";
+import { url_for } from "../lib/helpers";
+
+const groups = getEssayList();
+
+function isoDate(d: string): string {
+  const dt = new Date(d);
+  return isNaN(+dt) ? d : dt.toISOString();
+}
+---
+
+<Base title="即刻短文" pageTitle="即刻短文" topImg={false} aside={false}>
+  {groups.map((g) => (
+    <div id="page">
+      <div id="essay_page">
+        <div
+          class="author-content author-content-item essayPage single"
+          style={g.top_background ? `background: url(${g.top_background}) left 28% / cover no-repeat;` : ""}
+        >
+          <div class="card-content">
+            <div class="author-content-item-tips">{g.title}</div>
+            <span class="author-content-item-title">{g.subTitle}</span>
+            <div class="content-bottom">
+              <div class="tips">{g.tips}</div>
+            </div>
+            <div class="banner-button-group">
+              <a class="banner-button" href={g.buttonLink}>
+                <i class="anzhiyufont anzhiyu-icon-arrow-circle-right"></i>
+                <span class="banner-button-text">{g.buttonText}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div id="bber">
+          <section class="timeline page-1">
+            <ul id="waterfall" class="list">
+              {g.essay_list.slice(0, g.limit).map((item: EssayItem) => (
+                <li class="bber-item">
+                  <div class="bber-content">
+                    <p class="datacont">
+                      {item.content}
+                      {item.image && (
+                        <div class="bber-container-img">
+                          {item.image.map((src) => (
+                            <a class="bber-content-img" href={url_for(src)} target="_blank" data-fancybox="gallery" data-caption="">
+                              <img src={url_for(src)} />
+                            </a>
+                          ))}
+                          <div class="bber-content-noimg"></div>
+                          <div class="bber-content-noimg"></div>
+                          <div class="bber-content-noimg"></div>
+                        </div>
+                      )}
+                      {item.video && (
+                        <div class="bber-container-img">
+                          {item.video.map((v) => (
+                            v.includes("player.bilibili.com") ? (
+                              <div style="position: relative; padding: 30% 45%;margin-top: 10px;margin-bottom: 10px;">
+                                <iframe
+                                  style="position: absolute; width: 100%; height: 100%; left: 0; top: 0;margin: 0;border-radius: 12px;border: var(--style-border);"
+                                  src={url_for(v)}
+                                  scrolling="no"
+                                  border="0"
+                                  frameborder="no"
+                                  framespacing="0"
+                                  allowfullscreen="true"
+                                />
+                              </div>
+                            ) : (
+                              <a class="bber-content-video" href={url_for(v)} data-fancybox="gallery" data-caption="">
+                                <video src={url_for(v)}></video>
+                              </a>
+                            )
+                          ))}
+                          <div class="bber-content-noimg"></div>
+                          <div class="bber-content-noimg"></div>
+                          <div class="bber-content-noimg"></div>
+                        </div>
+                      )}
+                      {item.aplayer && (
+                        <div class="bber-music">
+                          <meting-js
+                            id={item.aplayer.id}
+                            server={item.aplayer.server}
+                            type="song"
+                            mutex="true"
+                            preload="none"
+                            theme="var(--anzhiyu-main)"
+                            data-lrctype="0"
+                            order="list"
+                          />
+                        </div>
+                      )}
+                    </p>
+                  </div>
+                  <hr />
+                  <div class="bber-bottom">
+                    <div class="bber-info">
+                      <div class="bber-info-time">
+                        <i class="anzhiyufont anzhiyu-icon-clock"></i>
+                        <time class="datatime" datetime={item.date}>{isoDate(item.date)}</time>
+                      </div>
+                      {item.link && (
+                        <a
+                          class="bber-content-link"
+                          title="跳转到短文指引的链接"
+                          href={url_for(item.link)}
+                          rel="external nofollow"
+                        >
+                          <i class="anzhiyufont anzhiyu-icon-link"></i>
+                          链接
+                        </a>
+                      )}
+                      {item.from && (
+                        <div class="bber-info-from">
+                          <i class="anzhiyufont anzhiyu-icon-fw-fire"></i>
+                          <span>{item.from}</span>
+                        </div>
+                      )}
+                      {item.address && (
+                        <div class="bber-info-from">
+                          <i class="anzhiyufont anzhiyu-icon-location-dot"></i>
+                          <span>{item.address}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div class="bber-reply">
+                      <i class="anzhiyufont anzhiyu-icon-message"></i>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <div id="bber-tips" style="color: var(--anzhiyu-secondtext);">
+          - 只展示最近{g.limit}条短文 -
+        </div>
+      </div>
+    </div>
+  ))}
+</Base>

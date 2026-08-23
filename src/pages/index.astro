@@ -1,0 +1,22 @@
+---
+import Base from "../layouts/Base.astro";
+import PostCard from "../components/PostCard.astro";
+import Pagination from "../components/Pagination.astro";
+import CategoryBar from "../components/CategoryBar.astro";
+import { loadData, sortedPosts } from "../lib/collections";
+import { site } from "../lib/site";
+
+const data = await loadData();
+const posts = sortedPosts(data.posts);
+const perPage = (site as any).index_per_page || 10;
+const total = Math.max(1, Math.ceil(posts.length / perPage));
+const paged = posts.slice(0, perPage);
+---
+
+<Base title={site.title} isHome={true} pageTitle={site.title}>
+  <div id="recent-posts" class="recent-posts">
+    <CategoryBar />
+    {paged.map((p, i) => <PostCard article={p} index={i} isHome={true} />)}
+    <Pagination current={1} total={total} base="/" />
+  </div>
+</Base>

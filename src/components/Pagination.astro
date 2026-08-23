@@ -1,0 +1,72 @@
+---
+import { url_for } from "../lib/helpers";
+
+interface Props {
+  /** 1-based current page number */
+  current: number;
+  /** total number of pages */
+  total: number;
+  /** Base path of the first page, e.g. "/", "/archives/", "/tags/foo/" */
+  base: string;
+}
+
+const { current, total, base } = Astro.props;
+
+// Mirror Hexo's built-in paginator options used by pagination.pug:
+//   mid_size: 1, end_size: 1 (Hexo default), escape: false
+const mid_size = 1;
+const end_size = 1;
+
+function link(i: number): string {
+  return url_for(i === 1 ? base : `${base}page/${i}/`);
+}
+
+// Collect the page numbers to display (left end + right end + middle window), deduped.
+const showSet = new Set<number>();
+for (let i = 1; i <= Math.min(end_size, total); i++) showSet.add(i);
+for (let i = Math.max(total - end_size + 1, 1); i <= total; i++) showSet.add(i);
+for (let i = Math.max(current - mid_size, 1); i <= Math.min(current + mid_size, total); i++) showSet.add(i);
+const showNums = [...showSet].sort((a, b) => a - b);
+
+// Build display items, inserting an ellipsis where there is a gap > 1.
+type Item = { type: "page" | "current" | "space"; num?: number };
+const items: Item[] = [];
+let prev = 0;
+for (const num of showNums) {
+  if (prev && num - prev > 1) items.push({ type: "space" });
+  items.push({ type: num === current ? "current" : "page", num });
+  prev = num;
+}
+
+// prev/next texts are raw HTML (icons + tips), escape:false — identical to pagination.pug
+const prev_text =
+  '<i class="anzhiyufont anzhiyu-icon-chevron-left fa-fw" style="font-weight: inherit; font-size: 1rem;"></i><div class="pagination_tips_prev">上页</div>';
+const next_text =
+  '<div class="pagination_tips_next">下页</div><i style="font-weight: inherit; font-size: 1rem;" class="anzhiyufont anzhiyu-icon-chevron-right fa-fw"></i>';
+---
+
+{
+  total >= 1 && (
+    <nav id="pagination">
+      <div class="pagination">
+        {current > 1 && (
+          <a class="extend prev" rel="prev" href={link(current - 1)} set:html={prev_text} />
+        )}
+        {items.map((it) =>
+          it.type === "space" ? (
+            <span class="space">&hellip;</span>
+          ) : it.type === "current" ? (
+            <span class="page-number current">{it.num}</span>
+          ) : (
+            <a class="page-number" href={link(it.num as number)}>
+              {it.num}
+            </a>
+          )
+        )}
+        {current < total && (
+          <a class="extend next" rel="next" href={link(current + 1)} set:html={next_text} />
+        )}
+      </div>
+    </nav>
+  )
+}

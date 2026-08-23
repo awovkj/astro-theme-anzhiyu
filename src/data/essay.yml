@@ -1,0 +1,31 @@
+# 即刻短文数据
+# 结构对照原主题 layout/includes/page/essay.pug
+# site.data.essay 为数组，每个元素包含顶部信息卡字段 + essay_list 列表
+- top_background: https://bu.dusays.com/2023/02/27/20230227142755.png
+  title: 即刻短文
+  subTitle: 刻录每时每刻
+  tips: 使用即刻短文，记录每时每刻的所思所想
+  buttonLink: https://web.okjike.com/
+  buttonText: 前往即刻
+  limit: 30
+  essay_list:
+    - content: 今天把 anzhiyu 主题移植到了 Astro，编译速度飞起，样式 1:1 还原，真香。
+      date: 2024-03-15 10:24:00
+      from: 即刻
+      address: 上海
+      image:
+        - https://picsum.photos/seed/essay1a/800/600
+        - https://picsum.photos/seed/essay1b/800/600
+    - content: 周末去爬了佘山，虽然不高，但登顶那一刻看到整片城市铺开在脚下，所有的疲惫都值了。
+      date: 2024-03-10 16:30:00
+      from: 微博
+      address: 上海佘山
+      image:
+        - https://picsum.photos/seed/essay2/1200/800
+    - content: 推荐一本最近在读的书《人月神话》，里面提到的"没有银弹"放到今天的软件工程依然适用，技术再怎么迭代，人与人协作的复杂性才是核心难题。
+      date: 2024-02-28 21:05:00
+      from: 豆瓣
+      link: https://book.douban.com/subject/26358448/
+    - content: 凌晨三点还在调一个诡异的 CSS 问题，最后发现是层级冲突。早点睡比什么都强，共勉。
+      date: 2024-02-20 03:12:00
+      from: 即刻

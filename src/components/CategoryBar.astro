@@ -1,0 +1,35 @@
+---
+import { theme } from "../lib/theme";
+import { url_for } from "../lib/helpers";
+import { loadData } from "../lib/collections";
+
+// 首页分类导航栏，结构与原版主题 includes/categoryBar 一致：
+// #categoryBar > #category-bar > #catalog-bar > #catalog-list + 箭头 + 更多
+const t = theme as any;
+const enable = !!(t.home_top && t.home_top.enable);
+const data = await loadData();
+const cats = [...(data.categories || [])].sort((a, b) => b.length - a.length);
+---
+
+{enable && (
+  <div id="categoryBar">
+    <div class="category-bar" id="category-bar">
+      <div id="catalog-bar">
+        <div id="catalog-list">
+          <div class="catalog-list-item select" id="首页">
+            <a href={url_for("/")}>首页</a>
+          </div>
+          {cats.map((c) => (
+            <div class="catalog-list-item" id={c.name}>
+              <a href={url_for(c.path)}>{c.name}</a>
+            </div>
+          ))}
+        </div>
+        <div class="category-bar-next" id="category-bar-next" onclick="anzhiyu.scrollCategoryBarToRight()" title="滑动">
+          <i class="anzhiyufont anzhiyu-icon-angle-double-right"></i>
+        </div>
+        <a class="catalog-more" href={url_for("categories/")}>更多</a>
+      </div>
+    </div>
+  </div>
+)}

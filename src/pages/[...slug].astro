@@ -1,0 +1,28 @@
+---
+import { getEntry, render, getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import { site } from "../lib/site";
+import { theme } from "../lib/theme";
+
+export async function getStaticPaths() {
+  const pages = await getCollection("pages");
+  return pages.map((entry) => ({ params: { slug: entry.id }, props: { id: entry.id } }));
+}
+
+const { id } = Astro.props;
+const entry = await getEntry("pages", id);
+if (!entry) return Astro.redirect("/404");
+const { Content } = await render(entry);
+const d = entry.data;
+const t = theme as any;
+const showToc = !!(t.aside?.enable && (t.toc?.page ?? true));
+---
+
+<Base title={d.title} pageTitle={d.title} description={d.description} showToc={showToc}>
+  <div id="page">
+    <div class="article-container">
+      <h1 class="article-title">{d.title}</h1>
+      <Content />
+    </div>
+  </div>
+</Base>

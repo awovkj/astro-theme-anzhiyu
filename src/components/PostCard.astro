@@ -1,0 +1,92 @@
+---
+import { theme } from "../lib/theme";
+import { site } from "../lib/site";
+import { _p } from "../lib/i18n";
+import { url_for, date, date_xml, fullDate, strip_html } from "../lib/helpers";
+import type { PostItem } from "../lib/collections";
+
+interface Props {
+  article: PostItem;
+  index?: number;
+  isHome?: boolean;
+}
+const { article, index = 0, isHome = false } = Astro.props;
+const t = theme as any;
+const link = article.path;
+const title = article.title || _p("no_title");
+const position = (t.cover && t.cover.position) || "right";
+const leftOrRight = position === "both" ? (index % 2 === 0 ? "left" : "right") : position === "left" ? "left" : "right";
+const post_cover = article.cover;
+const no_cover = article.cover === false || !t.cover?.index_enable ? "no-cover" : "";
+const new_post = isHome && index === 0;
+const dateFmt = (site as any).date_format || "YYYY-MM-DD";
+const pm = t.post_meta?.page || {};
+const method = t.index_post_content?.method;
+let content = "";
+if (method !== false) {
+  if (method === 1) content = article.description || "";
+  else if (method === 2) content = article.description || strip_html(article.content || "").substring(0, t.index_post_content?.length || 200) + " ...";
+  else content = strip_html(article.content || "").substring(0, t.index_post_content?.length || 200) + (strip_html(article.content || "").length > (t.index_post_content?.length || 200) ? " ..." : "");
+}
+const sticky = (article as any).sticky > 0 || (article as any).top;
+---
+
+<div class={`recent-post-item ${index === 0 ? "lastestpost-item" : ""}`}>
+  {post_cover && t.cover?.index_enable && (
+    <div class={`post_cover ${leftOrRight}`}>
+      <a href={url_for(link)} title={title} style="display:flex;height:100%;">
+        <img class="post_bg" src={url_for(String(post_cover))} alt={title} style="pointer-events:none" />
+      </a>
+    </div>
+  )}
+  <div class={`recent-post-info ${no_cover}`}>
+    <div class="recent-post-info-top">
+      <div class="recent-post-info-top-tips">
+        {sticky && (
+          <span class="article-meta sticky-warp"><i class="anzhiyufont anzhiyu-icon-thumbtack sticky"></i><span class="sticky">{_p("sticky")}</span></span>
+        )}
+        {pm.categories && article.categories.length > 0 && article.categories.map((c) => <span class="article-categories-original">{c}</span>)}
+        {new_post && <span class="newPost">{_p("post.new")}</span>}
+        <a class="unvisited-post" href={url_for(link)} title={title}>{_p("post.unread")}</a>
+      </div>
+      <a class="article-title" href={url_for(link)} title={title}>{title}</a>
+    </div>
+    <div class="article-meta-wrap">
+      {pm.date_type && (
+        <span class="post-meta-date">
+          {pm.date_type === "both" ? (
+            <>
+              <i class="anzhiyufont anzhiyu-icon-calendar-alt"></i>
+              <span class="article-meta-label">{_p("post.created")}</span>
+              <time class="post-meta-date-created" datetime={date_xml(article.date)} title={_p("post.created") + " " + fullDate(article.date)}>{date(article.date, dateFmt)}</time>
+              <span class="article-meta-separator"></span>
+              <i class="anzhiyufont anzhiyu-icon-history"></i>
+              <span class="article-meta-label">{_p("post.updated")}</span>
+              <time class="post-meta-date-updated" datetime={date_xml(article.updated || article.date)} title={_p("post.updated") + " " + fullDate(article.updated || article.date)}>{date(article.updated || article.date, dateFmt)}</time>
+            </>
+          ) : (
+            <>{(() => {
+              const up = pm.date_type === "updated";
+              const dt = up ? (article.updated || article.date) : article.date;
+              return (
+                <>
+                  <i class={`anzhiyufont ${up ? "anzhiyu-icon-history" : "anzhiyu-icon-calendar-days"}`} style="font-size:15px;"></i>
+                  <span class="article-meta-label">{up ? _p("post.updated") : _p("post.created")}</span>
+                  <time datetime={date_xml(dt)} title={(up ? _p("post.updated") : _p("post.created")) + " " + fullDate(dt)}>{date(dt, dateFmt)}</time>
+                </>
+              );
+            })()}</>
+          )}
+        </span>
+      )}
+      {pm.tags && article.tags.length > 0 && (
+        <span class="article-meta tags">
+          {article.tags.map((tg) => (
+            <a href={url_for(`tags/${encodeURIComponent(tg)}/`)} class="article-meta__tags"><span><i class="anzhiyufont anzhiyu-icon-hashtag"></i>{tg}</span></a>
+          ))}
+        </span>
+      )}
+    </div>
+    {method !== false && <div class="content" set:html={content} />}
+  </div>
+</div>

@@ -1,0 +1,213 @@
+---
+import { getEntry, render, getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { theme } from "../../lib/theme";
+import { site } from "../../lib/site";
+import { _p } from "../../lib/i18n";
+import { url_for, date, date_xml, fullDate } from "../../lib/helpers";
+import { loadData, sortedPosts } from "../../lib/collections";
+import Comments from "../../components/Comments.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  return posts.map((entry) => ({ params: { slug: entry.id }, props: { id: entry.id } }));
+}
+
+const { id } = Astro.props;
+const entry = await getEntry("posts", id);
+if (!entry) return Astro.redirect("/404");
+const { Content, headings } = await render(entry);
+
+const t = theme as any;
+const d = entry.data;
+const post = {
+  title: d.title,
+  path: entry.id,
+  date: d.date,
+  updated: d.updated,
+  tags: d.tags,
+  categories: d.categories,
+  cover: d.cover,
+};
+
+const data = await loadData();
+const allPosts = sortedPosts(data.posts);
+const currentIndex = allPosts.findIndex((p) => p.path === `posts/${id}/`);
+
+const paginationMode = t.post_pagination;
+let prevPost: (typeof allPosts)[0] | null = null;
+let nextPost: (typeof allPosts)[0] | null = null;
+if (paginationMode && currentIndex >= 0) {
+  if (paginationMode === 2) {
+    prevPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+    nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+  } else {
+    prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+    nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+  }
+}
+
+const rewardEnable = t.reward?.enable && Array.isArray(t.reward?.QR_code) && t.reward.QR_code.length > 0;
+const rewardItems: any[] = rewardEnable ? t.reward.QR_code : [];
+const errorImg = t.error_img?.post_page || "/img/404.jpg";
+
+function postCover(p: (typeof allPosts)[0] | null): string {
+  if (!p) return "";
+  const cover = p.cover === false ? (p as any).randomcover : p.cover;
+  return cover ? url_for(String(cover)) : url_for(errorImg);
+}
+
+// TOC generation from headings (mirrors toc(page.content))
+const showTocCfg = t.toc?.post ?? true;
+const showToc = !!(t.aside?.enable && showTocCfg && headings.length > 0);
+const tocNumber = d.toc_number !== undefined ? d.toc_number : t.toc?.number;
+function tocHtml(nodes: typeof headings): string {
+  if (!nodes.length) return "";
+  const items = nodes
+    .map((h) => {
+      const sub = h.subheadings && h.subheadings.length ? `<ul class="toc-child">${tocHtml(h.subheadings)}</ul>` : "";
+      return `<li class="toc-item toc-level-${h.depth}"><a class="toc-link" href="#${h.slug}"><span class="toc-text">${h.text}</span></a>${sub}</li>`;
+    })
+    .join("");
+  return `<ul class="toc-list ${tocNumber ? "" : "toc-no-number"}">${items}</ul>`;
+}
+const toc = tocHtml(headings);
+
+const dateFmt = (site as any).date_format || "YYYY-MM-DD";
+const postUpdate = d.updated ? fullDate(d.updated) : "";
+const contentBody = (entry as any).body || "";
+
+// 文章绝对地址（版权模块/分享按钮使用）
+const postUrl = new URL(url_for(`posts/${id}/`), site.url).href;
+const weiboShare = `https://service.weibo.com/share/share.php?title=${encodeURIComponent(d.title)}&url=${encodeURIComponent(postUrl)}&pic=${encodeURIComponent(String(d.cover || ""))}`;
+---
+
+<Base
+  title={d.title}
+  pageTitle={d.title}
+  description={d.description}
+  keywords={d.tags.join(",")}
+  isPost={true}
+  showToc={showToc}
+  tocHtml={toc}
+  post={post}
+  content={contentBody}
+  postUpdate={postUpdate}
+>
+  <div id="post">
+    <article id="article" class="post article" itemscope itemtype="https://schema.org/BlogPosting">
+      <div id="article-container">
+        <Content />
+      </div>
+
+      <div class="post-copyright">
+        <div class="copyright-cc-box"><i class="anzhiyufont anzhiyu-icon-copyright"></i></div>
+        <div class="post-copyright__author_box">
+          <a class="post-copyright__author_img" href={url_for("/")} title="头像">
+            <img class="post-copyright__author_img_back" title="头像" alt="头像" src={site.avatar} />
+            <img class="post-copyright__author_img_front" title="头像" alt="头像" src={site.avatar} />
+          </a>
+          <div class="post-copyright__author_name">{site.author}</div>
+          <div class="post-copyright__author_desc"></div>
+        </div>
+        <div class="post-copyright__post__info">
+          <a class="post-copyright__original" title="该文章为原创文章，注意版权协议" href={postUrl}>原创</a>
+          <a class="post-copyright-title"><span onclick={`copyPageUrl('${postUrl}')`}>{d.title}</span></a>
+        </div>
+        <div class="post-tools" id="post-tools">
+          <div class="post-tools-left">
+            <div class="rewardLeftButton"></div>
+            <div class="shareRight">
+              <div class="share-link mobile">
+                <div class="share-qrcode">
+                  <div class="share-button" title="使用手机访问这篇文章"><i class="anzhiyufont anzhiyu-icon-qrcode"></i></div>
+                  <div class="share-main">
+                    <div class="share-main-all">
+                      <div id="qrcode" title={postUrl}></div>
+                      <div class="reward-dec">使用手机访问这篇文章</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="share-link weibo">
+                <a class="share-button" target="_blank" rel="external nofollow noreferrer noopener" href={weiboShare}>
+                  <i class="anzhiyufont anzhiyu-icon-weibo"></i>
+                </a>
+              </div>
+              <div class="share-link copyurl">
+                <div class="share-button" id="post-share-url" title="复制链接" onclick={`copyPageUrl('${postUrl}')`}>
+                  <i class="anzhiyufont anzhiyu-icon-link"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="post-copyright__notice">
+          <span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span>
+        </div>
+      </div>
+
+      {rewardEnable && (
+        <div class="post-reward" onclick="anzhiyu.addRewardMask()">
+          <div class="reward-button button--animated" title={_p("reward.title")}>
+            <i class="anzhiyufont anzhiyu-icon-hand-heart-fill"></i>
+            {_p("reward.button")}
+          </div>
+          <div class="reward-main">
+            <div class="reward-all">
+              <span class="reward-title">{_p("reward.thanks")}</span>
+              <ul class="reward-group">
+                {rewardItems.map((item: any) => (
+                  <li class="reward-item">
+                    <a href={url_for(item.link || item.img)} target="_blank">
+                      <img class="post-qr-code-img" src={url_for(item.img)} alt={item.text} />
+                    </a>
+                    <div class="post-qr-code-desc">{item.text}</div>
+                  </li>
+                ))}
+              </ul>
+              <a class="reward-main-btn" href="/about/#about-reward" target="_blank">
+                <div class="reward-text">{_p("reward.list")}</div>
+                <div class="reward-dec">{_p("reward.list_desc")}</div>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div id="quit-box" onclick="anzhiyu.removeRewardMask()" style="display: none"></div>
+      )}
+
+      {paginationMode && (prevPost || nextPost) && (
+        <nav id="pagination" class="pagination-post">
+          {prevPost && (
+            <div class={`prev-post ${nextPost ? "pull-left" : "pull-full"}`}>
+              <a href={url_for(prevPost.path)}>
+                <img class="prev-cover" src={postCover(prevPost)} alt="cover of previous post" onerror={`this.onerror=null;this.src='${url_for(errorImg)}'`} />
+                <div class="pagination-info">
+                  <div class="label">{_p("pagination.prev")}</div>
+                  <div class="prev_info">{prevPost.title}</div>
+                </div>
+              </a>
+            </div>
+          )}
+          {nextPost && (
+            <div class={`next-post ${prevPost ? "pull-right" : "pull-full"}`}>
+              <a href={url_for(nextPost.path)}>
+                <img class="next-cover" src={postCover(nextPost)} alt="cover of next post" onerror={`this.onerror=null;this.src='${url_for(errorImg)}'`} />
+                <div class="pagination-info">
+                  <div class="label">{_p("pagination.next")}</div>
+                  <div class="next_info">{nextPost.title}</div>
+                </div>
+              </a>
+            </div>
+          )}
+        </nav>
+      )}
+
+      <Comments />
+    </article>
+  </div>
+
+  <script>
+    import "../../scripts/post.ts";
+  </script>
+</Base>

@@ -1,0 +1,53 @@
+---
+import { theme } from "../lib/theme";
+import { _p } from "../lib/i18n";
+
+interface Props {
+  isPost?: boolean;
+  showToc?: boolean;
+  commentsJsLoad?: boolean;
+}
+const { isPost = false, showToc = false, commentsJsLoad = false } = Astro.props;
+const t = theme as any;
+const readmode = t.readmode;
+const translate = t.translate || {};
+const darkmode = t.darkmode || {};
+const aside = t.aside || {};
+const chat_btn = t.chat_btn;
+
+const r = t.rightside_item_order || {};
+const hideArray = r.enable ? (r.hide ? r.hide.split(",") : []) : ["readmode", "translate", "darkmode", "hideAside"];
+const showArray = r.enable ? (r.show ? r.show.split(",") : []) : ["toc", "chat", "comment"];
+---
+
+<div id="rightside">
+  <div id="rightside-config-hide">
+    {hideArray.includes("readmode") && isPost && readmode && (
+      <button id="readmode" type="button" title={_p("rightside.readmode_title")}><i class="anzhiyufont anzhiyu-icon-book-open"></i></button>
+    )}
+    {hideArray.includes("translate") && translate.enable && (
+      <button id="translateLink" type="button" title={_p("rightside.translate_title")}>{translate.default}</button>
+    )}
+    {hideArray.includes("darkmode") && darkmode.enable && darkmode.button && (
+      <button id="darkmode" type="button" title={_p("rightside.night_mode_title")}><i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i></button>
+    )}
+    {hideArray.includes("hideAside") && aside.enable && aside.button && (
+      <button id="hide-aside-btn" type="button" title={_p("rightside.aside")}><i class="anzhiyufont anzhiyu-icon-arrows-left-right"></i></button>
+    )}
+    {hideArray.includes("toc") && showToc && (
+      <button id="mobile-toc-button" class="close" type="button" title={_p("rightside.toc")}><i class="anzhiyufont anzhiyu-icon-list-ul"></i></button>
+    )}
+  </div>
+  <div id="rightside-config-show">
+    {(isPost && (readmode || (translate.enable) || (darkmode.enable && darkmode.button))) || (translate.enable || (darkmode.enable && darkmode.button)) ? (
+      <button id="rightside-config" type="button" title={_p("rightside.setting")}><i class="anzhiyufont anzhiyu-icon-gear"></i></button>
+    ) : null}
+    {showArray.includes("toc") && showToc && (
+      <button id="mobile-toc-button" class="close" type="button" title={_p("rightside.toc")}><i class="anzhiyufont anzhiyu-icon-list-ul"></i></button>
+    )}
+    {showArray.includes("comment") && commentsJsLoad && (
+      <a id="to_comment" href="#post-comment" title={_p("rightside.scroll_to_comment")}><i class="anzhiyufont anzhiyu-icon-comments"></i></a>
+    )}
+    <button id="go-up" type="button" title={_p("rightside.back_to_top")}><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></button>
+  </div>
+</div>

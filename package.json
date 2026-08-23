@@ -1,0 +1,32 @@
+{
+  "name": "astro-theme-anzhiyu",
+  "version": "1.0.0",
+  "description": "AnZhiYu theme refactored for Astro — Card UI design, styling preserved from the original Hexo theme.",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "compile:css": "node scripts/compile-css.cjs",
+    "subset:font": "node scripts/subset-font.cjs"
+  },
+  "keywords": [
+    "astro",
+    "theme",
+    "anzhiyu",
+    "Card UI Design",
+    "blog"
+  ],
+  "dependencies": {
+    "astro": "^5.0.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "cssnano": "^7.1.9",
+    "csso": "^5.0.5",
+    "nib": "^1.2.0",
+    "postcss": "^8.5.26",
+    "stylus": "^0.63.0"
+  },
+  "license": "GPL-3.0"
+}

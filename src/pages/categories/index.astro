@@ -1,0 +1,20 @@
+---
+import Base from "../../layouts/Base.astro";
+import { loadData } from "../../lib/collections";
+import { url_for } from "../../lib/helpers";
+
+const data = await loadData();
+---
+
+<Base title="分类" pageTitle="分类" aside={false}>
+  <div id="category-page" class="category-page">
+    <div class="category-page-title">分类</div>
+    <div class="category-list">
+      {data.categories.map((c) => (
+        <div class="category-list-item" id={`/${c.path}`}>
+          <a href={url_for(c.path)}>{c.name}<span class="category-count">{c.length}</span></a>
+        </div>
+      ))}
+    </div>
+  </div>
+</Base>

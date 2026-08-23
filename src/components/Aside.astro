@@ -1,0 +1,213 @@
+---
+import { theme } from "../lib/theme";
+import { site } from "../lib/site";
+import { _p } from "../lib/i18n";
+import { url_for, date, date_xml, fullDate, cloudTags, aside_categories, aside_archives } from "../lib/helpers";
+import type { PostItem, TagInfo, CategoryInfo } from "../lib/collections";
+
+interface Props {
+  isPost?: boolean;
+  showToc?: boolean;
+  tocHtml?: string;
+  posts?: PostItem[];
+  categories?: CategoryInfo[];
+  tags?: TagInfo[];
+}
+const { isPost = false, showToc = false, tocHtml = "", posts = [], categories = [], tags = [] } = Astro.props;
+const t = theme as any;
+
+const a = t.aside || {};
+const recLimit = a.card_recent_post?.limit === 0 ? posts.length : a.card_recent_post?.limit || 5;
+const recSort = a.card_recent_post?.sort === "updated" ? "updated" : "date";
+const recent = [...posts].sort((x, y) => (recSort === "updated" ? +((y.updated as Date) || y.date) - +((x.updated as Date) || x.date) : +y.date - +x.date)).slice(0, recLimit);
+
+const catHtml = aside_categories(categories, { limit: a.card_categories?.limit === 0 ? 0 : a.card_categories?.limit || 8 });
+const tagLimit = a.card_tags?.limit === 0 ? 0 : a.card_tags?.limit || 40;
+const tagCloud = cloudTags({ source: tags, minfontsize: 1.05, maxfontsize: 1.05, limit: tagLimit, unit: "rem", color: !!a.card_tags?.color, highlightTags: a.card_tags?.highlightTags || [] });
+const archHtml = aside_archives(posts, { type: a.card_archives?.type || "monthly", format: a.card_archives?.format || "MMMM YYYY", order: a.card_archives?.order || -1, limit: a.card_archives?.limit === 0 ? 0 : a.card_archives?.limit || 8 });
+
+const avatar = (t.avatar && t.avatar.img) || site.avatar;
+const social = t.social || {};
+const authorDesc = (a.card_author && a.card_author.description) || site.description;
+const authorStatus = t.author_status || {};
+const weixin = a.card_weixin || {};
+const runtimeshow = t.runtimeshow || {};
+const wordcountCfg = t.wordcount || {};
+
+// simple-toc style switch for post pages
+const tocStyle = false; // default false -> full widget set
+---
+
+<div id="aside-content" class="aside-content">
+  {isPost ? (
+    tocStyle ? (
+      <div class="sticky_layout">
+        {showToc && (
+          <div id="card-toc" class="card-widget">
+            <div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bars"></i><span>{_p("aside.card_toc")}</span><span class="toc-percentage"></span></div>
+            <div class="toc-content" set:html={tocHtml} />
+          </div>
+        )}
+      </div>
+    ) : (
+      <>
+        {a.card_author?.enable && (
+          <div class="card-widget card-info">
+            <div class="card-content">
+              {authorStatus.enable && <div class="author-info__sayhi" id="author-info__sayhi"></div>}
+              <div class="author-info-avatar">
+                <img class="avatar-img" src={url_for(avatar)} alt="avatar" />
+                {authorStatus.enable && authorStatus.statusImg && <div class="author-status"><img src={url_for(authorStatus.statusImg)} class="g-status" alt="status" /></div>}
+              </div>
+              <div class="author-info__description" set:html={authorDesc} />
+              {social && Object.keys(social).length > 0 && (
+                <div class="author-info__bottom-group">
+                  <a class="author-info__bottom-group-left" href={url_for((a.card_author && a.card_author.name_link) || "/")}>
+                    <h1 class="author-info__name">{site.author}</h1>
+                    <div class="author-info__desc">{site.subtitle}</div>
+                  </a>
+                  <div class="card-info-social-icons is-center">
+                    {Object.entries(social).map(([title, value]) => {
+                      const v = String(value);
+                      const parts = v.split("||").map((s) => s.trim());
+                      const icon = parts[1];
+                      return <a class="social-icon faa-parent animated-hover" href={url_for(parts[0])} target="_blank" title={title}>{icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${icon}`}></i>}</a>;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {a.card_announcement?.enable && (
+          <div class="card-widget card-announcement">
+            <div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bullhorn anzhiyu-shake"></i><span>{_p("aside.card_announcement")}</span></div>
+            <div class="announcement_content" set:html={a.card_announcement.content} />
+          </div>
+        )}
+
+        {weixin.enable && (
+          <div class="card-widget anzhiyu-right-widget" id="card-wechat">
+            <div id="flip-wrapper"><div id="flip-content">
+              <div class="face" style={`background: url(${weixin.face}) center center / 100% no-repeat`}></div>
+              <div class="back face" style={`background: url(${weixin.backFace}) center center / 100% no-repeat`}></div>
+            </div></div>
+          </div>
+        )}
+
+        <div class="sticky_layout">
+          {showToc && (
+            <div id="card-toc" class="card-widget">
+              <div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bars"></i><span>{_p("aside.card_toc")}</span><span class="toc-percentage"></span></div>
+              <div class="toc-content" set:html={tocHtml} />
+            </div>
+          )}
+          {a.card_recent_post?.enable && (
+            <div class="card-widget card-recent-post">
+              <div class="item-headline"><i class="anzhiyufont anzhiyu-icon-history"></i><span>{_p("aside.card_recent_post")}</span></div>
+              <div class="aside-list">
+                {recent.map((article) => {
+                  const link = article.path;
+                  const title = article.title;
+                  const cover = article.cover;
+                  const noCover = cover === false || !t.cover?.aside_enable ? "no-cover" : "";
+                  const time = recSort === "updated" ? (article.updated || article.date) : article.date;
+                  return (
+                    <div class={`aside-list-item ${noCover}`}>
+                      {cover && t.cover?.aside_enable && (
+                        <a class="thumbnail" href={url_for(link)} title={title}>
+                          <img src={url_for(String(cover))} alt={title} />
+                        </a>
+                      )}
+                      <div class="content">
+                        <a class="title" href={url_for(link)} title={title}>{title}</a>
+                        <time datetime={date_xml(time)} title={_p("post.created") + " " + fullDate(time)}>{date(time, (site as any).date_format || "YYYY-MM-DD")}</time>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </>
+    )
+  ) : (
+    <>
+      {a.card_author?.enable && (
+        <div class="card-widget card-info">
+          <div class="card-content">
+            {authorStatus.enable && <div class="author-info__sayhi" id="author-info__sayhi"></div>}
+            <div class="author-info-avatar">
+              <img class="avatar-img" src={url_for(avatar)} alt="avatar" />
+              {authorStatus.enable && authorStatus.statusImg && <div class="author-status"><img src={url_for(authorStatus.statusImg)} class="g-status" alt="status" /></div>}
+            </div>
+            <div class="author-info__description" set:html={authorDesc} />
+            {social && Object.keys(social).length > 0 && (
+              <div class="author-info__bottom-group">
+                <a class="author-info__bottom-group-left" href={url_for((a.card_author && a.card_author.name_link) || "/")}>
+                  <h1 class="author-info__name">{site.author}</h1>
+                  <div class="author-info__desc">{site.subtitle}</div>
+                </a>
+                <div class="card-info-social-icons is-center">
+                  {Object.entries(social).map(([title, value]) => {
+                    const v = String(value);
+                    const parts = v.split("||").map((s) => s.trim());
+                    const icon = parts[1];
+                    return <a class="social-icon faa-parent animated-hover" href={url_for(parts[0])} target="_blank" title={title}>{icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${icon}`}></i>}</a>;
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {a.card_announcement?.enable && (
+        <div class="card-widget card-announcement">
+          <div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bullhorn anzhiyu-shake"></i><span>{_p("aside.card_announcement")}</span></div>
+          <div class="announcement_content" set:html={a.card_announcement.content} />
+        </div>
+      )}
+
+      {weixin.enable && (
+        <div class="card-widget anzhiyu-right-widget" id="card-wechat">
+          <div id="flip-wrapper"><div id="flip-content">
+            <div class="face" style={`background: url(${weixin.face}) center center / 100% no-repeat`}></div>
+            <div class="back face" style={`background: url(${weixin.backFace}) center center / 100% no-repeat`}></div>
+          </div></div>
+        </div>
+      )}
+
+      {a.card_categories?.enable && categories.length > 0 && <div class="card-widget card-categories" set:html={catHtml} />}
+
+      <div class="sticky_layout">
+        {showToc && (
+          <div id="card-toc" class="card-widget">
+            <div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bars"></i><span>{_p("aside.card_toc")}</span></div>
+            <div class="toc-content" set:html={tocHtml} />
+          </div>
+        )}
+        <div class="card-widget">
+          {a.card_archives?.enable && (
+            <>
+              <div class="card-archives" set:html={archHtml} />
+              <hr />
+            </>
+          )}
+          {a.card_webinfo?.enable && (
+          <div class="card-webinfo">
+            <div class="item-headline"><i class="anzhiyufont anzhiyu-icon-chart-line"></i><span>{_p("aside.card_webinfo.headline")}</span></div>
+            <div class="webinfo">
+              {a.card_webinfo.post_count && <div class="webinfo-item"><div class="webinfo-item-title"><i class="anzhiyufont anzhiyu-icon-file-lines"></i><div class="item-name">{_p("aside.card_webinfo.article_name") + " :"}</div></div><div class="item-count">{posts.length}</div></div>}
+              {runtimeshow.enable && <div class="webinfo-item"><div class="webinfo-item-title"><i class="anzhiyufont anzhiyu-icon-stopwatch"></i><div class="item-name">{_p("aside.card_webinfo.runtime.name") + " :"}</div></div><div class="item-count" id="runtimeshow" data-publishdate={date_xml(new Date(runtimeshow.publish_date || Date.now()))}></div></div>}
+              <div class="webinfo-item"><div class="webinfo-item-title"><i class="anzhiyufont anzhiyu-icon-hourglass-start"></i><div class="item-name">{_p("aside.card_webinfo.last_push_date.name") + " :"}</div></div><div class="item-count" id="last-push-date" data-lastpushdate={date_xml(new Date())}></div></div>
+            </div>
+          </div>
+        )}
+        </div>
+      </div>
+    </>
+  )}
+</div>

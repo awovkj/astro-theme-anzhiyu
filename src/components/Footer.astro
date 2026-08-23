@@ -1,0 +1,108 @@
+---
+import { theme } from "../lib/theme";
+import { site } from "../lib/site";
+import { _p } from "../lib/i18n";
+import { url_for } from "../lib/helpers";
+
+const t = theme as any;
+const nowYear = new Date().getFullYear();
+const socialBar = t.footer?.socialBar;
+const owner = t.footer?.owner;
+const runtime = t.footer?.runtime;
+const customText = t.footer?.custom_text;
+const list = t.footer?.list;
+const bdageitem = t.footer?.bdageitem;
+const footerBar = t.footer?.footerBar;
+const centerImg = (socialBar?.centerImg) || (t.avatar && t.avatar.img) || site.avatar;
+---
+
+<div id="footer-wrap">
+  {socialBar?.enable && (
+    <div id="footer_deal">
+      {(socialBar.left || []).map((item: any) => (
+        <a class="deal_link" href={url_for(item.link)} title={item.title}>
+          {item.icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${item.icon}`}></i>}
+        </a>
+      ))}
+      <img class="footer_mini_logo" title={_p("footer.back_to_top")} alt={_p("footer.back_to_top")} onclick="anzhiyu.scrollToDest(0, 500)" src={centerImg} width="50" height="50" />
+      {(socialBar.right || []).map((item: any) => (
+        <a class="deal_link" href={url_for(item.link)} title={item.title}>
+          {item.icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${item.icon}`}></i>}
+        </a>
+      ))}
+    </div>
+  )}
+
+  {owner?.enable && !footerBar?.enable && (
+    <div class="copyright">
+      {owner.since && owner.since != nowYear ? `©${owner.since} - ${nowYear} By ${site.author}` : `©${nowYear} By ${site.author}`}
+    </div>
+  )}
+
+  {runtime?.enable && (
+    <div id="workboard">
+      {runtime.work_img != null && (
+        <img src={runtime.work_img} alt={runtime.work_description} title={runtime.work_description} class="workSituationImg boardsign" />
+      )}
+      <div id="runtimeTextTip"></div>
+    </div>
+  )}
+
+  {customText && <div class="footer_custom_text" set:html={customText} />}
+
+  {list?.enable && (
+    <div id="anzhiyu-footer">
+      {(list.project || []).map((item: any) => (
+        <div class="footer-group">
+          <div class="footer-title">{item.title}</div>
+          <div class="footer-links">
+            {(item.links || []).map((it: any) => (
+              <a class="footer-item" title={it.title} href={url_for(it.link)}>{it.title}</a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+
+  {bdageitem?.enable && (
+    <p id="ghbdages">
+      {(bdageitem.list || []).map((item: any) => (
+        <a class="github-badge" target="_blank" href={item.link} style="margin-inline:5px" data-title={item.message} title={item.message}>
+          <img src={item.shields} alt={item.message} />
+        </a>
+      ))}
+    </p>
+  )}
+</div>
+
+{footerBar?.enable && (
+  <div id="footer-bar">
+    <div class="footer-bar-links">
+      <div class="footer-bar-left">
+        <div id="footer-bar-tips">
+          {owner?.enable && (
+            <div class="copyright">
+              {owner.since && owner.since != nowYear ? `©${owner.since} - ${nowYear} By ` : `©${nowYear} By `}
+              <a class="footer-bar-link" href={url_for(footerBar.authorLink || site.url)} title={site.author} target="_blank">{site.author}</a>
+            </div>
+          )}
+        </div>
+        <div id="footer-type-tips"></div>
+      </div>
+      <div class="footer-bar-right">
+        {(footerBar.linkList || []).map((item: any) => (
+          <a class="footer-bar-link" href={url_for(item.link)} title={item.text}>{item.text}</a>
+        ))}
+        {footerBar.cc?.enable && (
+          <a class="footer-bar-link cc" href={url_for(footerBar.cc.link)} title={_p("footer.cc_license")}>
+            <i class="anzhiyufont anzhiyu-icon-copyright-line"></i>
+            <i class="anzhiyufont anzhiyu-icon-creative-commons-by-line"></i>
+            <i class="anzhiyufont anzhiyu-icon-creative-commons-nc-line"></i>
+            <i class="anzhiyufont anzhiyu-icon-creative-commons-nd-line"></i>
+          </a>
+        )}
+      </div>
+    </div>
+  </div>
+)}
