@@ -25,3 +25,10 @@ public/font/hhh.ttf
 # 编辑器
 .vscode/
 .idea/
+
+# 代理/工具运行时产物（项目记忆、本地状态，不应入库）
+.workbuddy/
+
+# 系统隐藏文件
+.DS_Store
+Thumbs.db
