@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { theme } from "../lib/theme";
 import { loadData } from "../lib/collections";
 import { url_for } from "../lib/helpers";
 
@@ -7,20 +8,31 @@ import { url_for } from "../lib/helpers";
  * search.xml. Consumed by the client-side local search runtime
  * (src/scripts/local-search.ts).
  *
- * Output shape: { posts: [{ title, url, content, tags }] }
+ * Output shape: { posts: [{ title, url, content, tags, cover }] }
  *   - url:   {post.path} (already "posts/{slug}/", root-prefixed via url_for)
  *   - content: plain-text excerpt of the raw markdown body, truncated to ~5000 chars
+ *   - cover: first image of the post (frontmatter cover, else first image in body),
+ *            used by the search dialog as the hit-item thumbnail (mirrors the
+ *            original anzhiyu theme's `oneImage` behavior)
+ *
+ * local_search 关闭时返回 404，不生成搜索索引（死产物不进部署）。
  */
 export const GET: APIRoute = async () => {
+  const t = theme as any;
+  if (!(t.local_search && t.local_search.enable)) {
+    return new Response("Not Found", { status: 404 });
+  }
   const data = await loadData();
   const posts = data.posts.map((p) => {
     const entry: any = (p as any)._entry;
     const rawBody: string = (entry && typeof entry.body === "string" ? entry.body : "") || "";
+    const coverSrc = firstImage(p, rawBody);
     return {
       title: p.title,
       url: url_for(p.path),
       content: stripMarkdown(rawBody).slice(0, 5000),
       tags: p.tags || [],
+      cover: coverSrc ? url_for(coverSrc) : "",
     };
   });
 
@@ -28,6 +40,22 @@ export const GET: APIRoute = async () => {
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 };
+
+/**
+ * Resolve the thumbnail shown next to a search hit — frontmatter cover first,
+ * then the first image referenced in the raw markdown body (either markdown
+ * image syntax `![alt](src)` or an inline HTML `<img src>`). Returns "" when
+ * the post has no image at all.
+ */
+function firstImage(post: { cover?: string | boolean }, rawBody: string): string {
+  if (typeof post.cover === "string" && post.cover.trim()) return post.cover.trim();
+  if (!rawBody) return "";
+  const md = rawBody.match(/!\[[^\]]*\]\(\s*([^)\s]+)[^)]*\)/);
+  if (md && md[1]) return md[1];
+  const html = rawBody.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (html && html[1]) return html[1];
+  return "";
+}
 
 /**
  * Reduce raw markdown to a flat plain-text string suitable for keyword matching.

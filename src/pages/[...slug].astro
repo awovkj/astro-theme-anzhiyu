@@ -1,12 +1,11 @@
 ---
-import { getEntry, render, getCollection } from "astro:content";
+import { getEntry, render, getCollection, type CollectionEntry } from "astro:content";
 import Base from "../layouts/Base.astro";
-import { site } from "../lib/site";
 import { theme } from "../lib/theme";
 
 export async function getStaticPaths() {
   const pages = await getCollection("pages");
-  return pages.map((entry) => ({ params: { slug: entry.id }, props: { id: entry.id } }));
+  return pages.map((entry: CollectionEntry<"pages">) => ({ params: { slug: entry.id }, props: { id: entry.id } }));
 }
 
 const { id } = Astro.props;

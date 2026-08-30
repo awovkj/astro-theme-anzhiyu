@@ -1,5 +1,7 @@
 import { defineConfig } from "astro/config";
 import remarkHexoTags from "./src/lib/remark-hexo-tags.mjs";
+import { blogLightTheme, blogDarkTheme } from "./src/lib/shiki-themes.mjs";
+import { unified } from "@astrojs/markdown-remark";
 
 // AnZhiYu Astro theme — core configuration.
 // The visual styling lives in src/styles/theme.css (compiled 1:1 from the original
@@ -11,16 +13,22 @@ export default defineConfig({
     format: "directory",
   },
   markdown: {
-    remarkPlugins: [remarkHexoTags],
+    processor: unified({ remarkPlugins: [remarkHexoTags] }),
     shikiConfig: {
-      // 双主题：浅色 catppuccin-latte / 深色 catppuccin-mocha（运行时按 data-theme 切换）
+      // 双主题：自定义 blog-light / blog-dark（运行时按 data-theme 切换）
+      // 配色见 src/lib/shiki-themes.mjs —— 沿用 catppuccin 底色/前景，
+      // token 重新着色：字符串蓝/关键字红/函数紫/数字橙，避免大段连续绿色
       themes: {
-        light: "catppuccin-latte",
-        dark: "catppuccin-mocha",
+        light: blogLightTheme,
+        dark: blogDarkTheme,
       },
     },
   },
   vite: {
+    build: {
+      // The legacy theme CSS uses syntax that lightningcss rejects.
+      cssMinify: "esbuild",
+    },
     css: {
       preprocessorOptions: {
         // We ship pre-compiled CSS; this is only a safety net.

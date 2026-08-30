@@ -18,7 +18,8 @@ const mid_size = 1;
 const end_size = 1;
 
 function link(i: number): string {
-  return url_for(i === 1 ? base : `${base}page/${i}/`);
+  const normalizedBase = base.endsWith("/") ? base : `${base}/`;
+  return url_for(i === 1 ? normalizedBase : `${normalizedBase}page/${i}/`);
 }
 
 // Collect the page numbers to display (left end + right end + middle window), deduped.
@@ -46,7 +47,7 @@ const next_text =
 ---
 
 {
-  total >= 1 && (
+  total > 1 && (
     <nav id="pagination">
       <div class="pagination">
         {current > 1 && (

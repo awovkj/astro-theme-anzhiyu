@@ -2,7 +2,7 @@
 
 将 Hexo 主题 **anzhiyu** 重构为 [Astro](https://astro.build) 主题的版本。**样式（CSS）完整保留**，HTML 结构与 class 名与原主题一致，仅把 Pug 模板与 Hexo 运行时替换为 Astro 组件与内容集合。
 
-> 样式优先：所有视觉风格来自原始主题 `source/css` 中的 Stylus，经 `scripts/compile-css.js` 编译为 `src/styles/theme.css`，逐字保留，未做改写。
+> 样式优先：所有视觉风格来自原始主题 `source/css` 中的 Stylus，经 `scripts/compile-css.cjs` 编译为 `src/styles/theme.css`，逐字保留，未做改写。
 
 ## 目录结构
 
@@ -12,7 +12,8 @@ astro-theme-anzhiyu/
 ├─ package.json
 ├─ tsconfig.json
 ├─ scripts/
-│  └─ compile-css.js           # 把原主题 Stylus 编译为 theme.css（带 hexo-config 求值）
+│  └─ compile-css.cjs          # 把原主题 Stylus 编译为 theme.css（带 hexo-config 求值）
+├─ stylus/                     # 原主题 Stylus 源（已入库，编译的唯一数据源）
 ├─ src/
 │  ├─ config/
 │  │  ├─ _config.yml           # 原样复制的主题配置（编辑它即可改主题行为）
@@ -40,8 +41,9 @@ astro-theme-anzhiyu/
 │  │  ├─ categories/index.astro + categories/[category].astro
 │  │  └─ 404.astro
 │  ├─ content/
-│  │  ├─ posts/*.md            # 文章（示例 3 篇）
-│  │  └─ pages/*.md            # 页面（示例 about）
+│  │  ├─ posts/*.md            # 文章
+│  │  ├─ pages/*.md            # 页面（示例 about）
+│  │  └─ templates/            # 新建文章/页面的 frontmatter 模板
 │  └─ scripts/
 │     └─ theme.ts              # 客户端运行时（暗色切换/滚动/抽屉等）
 └─ public/                     # 静态资源（可选）
@@ -49,10 +51,14 @@ astro-theme-anzhiyu/
 
 ## 快速开始
 
+需要 Node.js 22.12.0 或更高版本。
+
 ```bash
 npm install
 npm run dev        # 本地预览 http://localhost:4321
 npm run build      # 产物输出到 dist/
+npm run check      # Astro / TypeScript 静态检查
+npm run validate   # 静态检查 + 生产构建
 npm run preview    # 预览构建产物
 ```
 
@@ -60,8 +66,8 @@ npm run preview    # 预览构建产物
 
 - **主题外观**：编辑 `src/config/_config.yml`（与原 Hexo 主题 `_config.yml` 完全一致，已整体复制）。
 - **站点信息**：编辑 `src/lib/site.ts`（标题、作者、语言、头像、favicon、目录名等）。
-- **图标字体**：默认从 `cdn.cbd.int` 加载安知鱼图标字体；也可在 `src/config/_config.yml` 的 `theme.asset.ali_iconfont_css` 指定自己的链接。
-- **写文章**：在 `src/content/posts/` 新建 `.md`，front-matter 支持 `title / date / updated / tags / categories / cover / description / top_group_index / swiper_index` 等。
+- **图标字体**：已自托管在 `public/iconfont/`（安知鱼官方图标字体的本地副本，同源加载，无第三方 CDN）；也可在 `src/config/_config.yml` 的 `theme.asset.ali_iconfont_css` 指定自己的链接。
+- **写文章**：在 `src/content/posts/` 新建 `.md`（可从 `src/content/templates/post.md` 复制模板），front-matter 支持 `title / date / updated / tags / categories / cover / description / top / top_group_index / swiper_index / public` 等。
 
 ## 与原主题的对应关系
 
@@ -89,13 +95,15 @@ npm run preview    # 预览构建产物
 
 ## 重新编译样式
 
-若修改了原主题 `source/css`（本仓库未自带，需从原 Hexo 主题复制），可执行：
+Stylus 源已入库（`stylus/` 目录）。若修改了 Stylus 源或 `src/config/_config.yml` 中影响样式的配置（`theme_color`、`aside`、`article_double_row`、`css_prefix` 等），执行：
 
 ```bash
 npm run compile:css
 ```
 
-会自动读取 `src/config/_config.yml` 作为 `hexo-config` 数据源，输出 `src/styles/theme.css`。
+会读取 `src/config/_config.yml` 作为 `hexo-config` 数据源（与运行时 `src/lib/theme.ts` 解析同一份文件），输出 `src/styles/theme.css`。
+
+注：`css_prefix` 已置为 `false`——nib 不再注入 `-o-`/`-ms-`/`-moz-` 化石前缀（现代浏览器均不需要），如需恢复改为 `true` 再编译。
 
 ## 许可
 

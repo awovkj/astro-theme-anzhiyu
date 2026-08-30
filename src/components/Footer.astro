@@ -14,8 +14,17 @@ const list = t.footer?.list;
 const bdageitem = t.footer?.bdageitem;
 const footerBar = t.footer?.footerBar;
 const centerImg = (socialBar?.centerImg) || (t.avatar && t.avatar.img) || site.avatar;
+// wrap 内任意区块启用时才渲染（全关时避免输出空白的纯色区块；runtime 已移至 footer-bar）
+const hasWrapContent = !!(
+  socialBar?.enable ||
+  (owner?.enable && !footerBar?.enable) ||
+  customText ||
+  list?.enable ||
+  bdageitem?.enable
+);
 ---
 
+{hasWrapContent && (
 <div id="footer-wrap">
   {socialBar?.enable && (
     <div id="footer_deal">
@@ -36,15 +45,6 @@ const centerImg = (socialBar?.centerImg) || (t.avatar && t.avatar.img) || site.a
   {owner?.enable && !footerBar?.enable && (
     <div class="copyright">
       {owner.since && owner.since != nowYear ? `©${owner.since} - ${nowYear} By ${site.author}` : `©${nowYear} By ${site.author}`}
-    </div>
-  )}
-
-  {runtime?.enable && (
-    <div id="workboard">
-      {runtime.work_img != null && (
-        <img src={runtime.work_img} alt={runtime.work_description} title={runtime.work_description} class="workSituationImg boardsign" />
-      )}
-      <div id="runtimeTextTip"></div>
     </div>
   )}
 
@@ -75,6 +75,7 @@ const centerImg = (socialBar?.centerImg) || (t.avatar && t.avatar.img) || site.a
     </p>
   )}
 </div>
+)}
 
 {footerBar?.enable && (
   <div id="footer-bar">
@@ -87,8 +88,8 @@ const centerImg = (socialBar?.centerImg) || (t.avatar && t.avatar.img) || site.a
               <a class="footer-bar-link" href={url_for(footerBar.authorLink || site.url)} title={site.author} target="_blank">{site.author}</a>
             </div>
           )}
+          {runtime?.enable && <span id="runtimeTextTip"></span>}
         </div>
-        <div id="footer-type-tips"></div>
       </div>
       <div class="footer-bar-right">
         {(footerBar.linkList || []).map((item: any) => (

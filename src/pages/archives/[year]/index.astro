@@ -1,0 +1,37 @@
+---
+import Base from "../../../layouts/Base.astro";
+import { loadData, sortedPosts } from "../../../lib/collections";
+import { site } from "../../../lib/site";
+import { url_for, date, date_xml, fullDate } from "../../../lib/helpers";
+
+export async function getStaticPaths() {
+  const data = await loadData();
+  const years = [...new Set(data.posts.map((post) => post.date.getFullYear()))];
+  return years.map((year) => ({ params: { year: String(year) }, props: { year } }));
+}
+
+const { year } = Astro.props;
+const data = await loadData();
+const posts = sortedPosts(data.posts).filter((post) => post.date.getFullYear() === Number(year));
+const dateFmt = (site as any).date_format || "YYYY-MM-DD";
+const archiveTitle = `归档 - ${year}`;
+---
+
+<Base title={archiveTitle} pageTitle={archiveTitle} aside={false}>
+  <div class="article-sort-title">{year} 年文章 - {posts.length}</div>
+  <div id="archives" class="article-sort">
+    {posts.length ? posts.map((p) => (
+      <div class={`article-sort-item year-${year}`}>
+        <a class="article-sort-item-img" href={url_for(p.path)}>
+          {p.cover && <img src={url_for(String(p.cover))} alt={p.title} />}
+        </a>
+        <div class="article-sort-item-info">
+          <div class="article-sort-item-time">
+            <time datetime={date_xml(p.date)} title={fullDate(p.date)}>{date(p.date, dateFmt)}</time>
+          </div>
+          <a class="article-sort-item-title" href={url_for(p.path)} title={p.title}>{p.title}</a>
+        </div>
+      </div>
+    )) : <p class="article-sort-empty">暂无文章</p>}
+  </div>
+</Base>

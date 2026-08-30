@@ -97,7 +97,7 @@ docsearch:
 
 # Local search
 local_search:
-  enable: false
+  enable: true
   preload: true
   CDN:
 
@@ -730,14 +730,15 @@ beautify:
 font:
   global-font-size: 16px
   code-font-size:
-  font-family:
+  # 全站字体：自定义 hhh 子集字体优先，hhh-extra 补充符号/花体/假名，缺字时回退系统无衬线
+  font-family: hhh, hhh-extra, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Lato, Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif
   code-font-family: consolas, Menlo, "PingFang SC", "Microsoft JhengHei", "Microsoft YaHei", sans-serif
 
 # Font settings for the site title and site subtitle
 # 左上角网站名字 主页居中网站名字
 blog_title_font:
   font_link:
-  font-family: PingFang SC, 'Hiragino Sans GB', 'Microsoft JhengHei', 'Microsoft YaHei', sans-serif
+  font-family: hhh, hhh-extra, PingFang SC, 'Hiragino Sans GB', 'Microsoft JhengHei', 'Microsoft YaHei', sans-serif
 
 # The setting of divider icon (水平分隔线图标设置)
 hr_icon:
@@ -1030,7 +1031,8 @@ pwa:
 Open_Graph_meta: true
 
 # Add the vendor prefixes to ensure compatibility
-css_prefix: true
+# false：nib 不再注入 -o-/-ms-/-moz- 化石前缀（现代浏览器均不需要）
+css_prefix: false
 
 # 首页顶部相关配置
 home_top:

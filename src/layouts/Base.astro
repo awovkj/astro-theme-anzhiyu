@@ -1,6 +1,7 @@
 ---
 import "../styles/theme.css";
 import "../styles/custom.css";
+import "../styles/font-extra.css";
 import { theme } from "../lib/theme";
 import { site } from "../lib/site";
 import Head from "../components/Head.astro";
@@ -54,6 +55,7 @@ const {
 const t = theme as any;
 const data = await loadData();
 const posts = sortedPosts(data.posts);
+const searchEnabled = !!(t.local_search && t.local_search.enable);
 const asideEnabled = !is404 && !!t.aside?.enable && aside !== false;
 const hideAside = aside === false || !t.aside?.enable ? "hide-aside" : "";
 const htmlHideAside = t.aside?.enable && t.aside?.hide ? "hide-aside" : "";
@@ -62,7 +64,7 @@ const pageType = isPost ? "post" : "page";
 // top image resolution (mirrors layout.pug)
 let resolvedTopImg: string | false = topImg !== undefined ? topImg : false;
 if (topImg === undefined) {
-  if (isPost && post) resolvedTopImg = (post.cover as string) || false;
+  if (isPost && post) resolvedTopImg = typeof post.cover === "string" ? post.cover : false;
   else if (isHome) resolvedTopImg = t.index_img !== false ? t.index_img || t.default_top_img || false : false;
   else if (!is404) resolvedTopImg = t.default_top_img || false;
   else resolvedTopImg = false;
@@ -91,7 +93,7 @@ if (disableTopImg) resolvedTopImg = false;
           {isHome && <TopHome posts={posts} tags={data.tags} />}
           <div id="content-inner" class={`layout ${hideAside}`}>
             <slot />
-            {asideEnabled && <Aside isPost={isPost} showToc={showToc} tocHtml={tocHtml} posts={posts} categories={data.categories} tags={data.tags} />}
+            {asideEnabled && <Aside isPost={isPost} showToc={showToc} tocHtml={tocHtml} posts={posts} tags={data.tags} />}
           </div>
         </main>
         <footer id="footer">
@@ -103,7 +105,7 @@ if (disableTopImg) resolvedTopImg = false;
     <Sidebar postsCount={posts.length} tagsCount={data.tags.length} categoriesCount={data.categories.length} tags={data.tags} />
     <Music />
     <Popup />
-    <LocalSearch />
+    {searchEnabled && <LocalSearch />}
 
     <script>
       import "../scripts/theme.ts";

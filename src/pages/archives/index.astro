@@ -21,7 +21,7 @@ const dateFmt = (site as any).date_format || "YYYY-MM-DD";
       <div class="article-sort-group">
         <div class="article-sort-item"><div class="article-sort-item-info"><div class="article-sort-item-time">{g.year}</div></div></div>
         {g.posts.map((p) => (
-          <div class="article-sort-item year-{g.year}">
+          <div class={`article-sort-item year-${g.year}`}>
             <a class="article-sort-item-img" href={url_for(p.path)}>
               {p.cover && <img src={url_for(String(p.cover))} alt={p.title} />}
             </a>

@@ -1,16 +1,18 @@
 ---
-import { getEntry, render, getCollection } from "astro:content";
+import { getEntry, render, getCollection, type CollectionEntry } from "astro:content";
+import type { MarkdownHeading } from "astro";
 import Base from "../../layouts/Base.astro";
 import { theme } from "../../lib/theme";
 import { site } from "../../lib/site";
 import { _p } from "../../lib/i18n";
-import { url_for, date, date_xml, fullDate } from "../../lib/helpers";
+import { url_for, fullDate } from "../../lib/helpers";
 import { loadData, sortedPosts } from "../../lib/collections";
 import Comments from "../../components/Comments.astro";
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts");
-  return posts.map((entry) => ({ params: { slug: entry.id }, props: { id: entry.id } }));
+  // public: false 的文章视为未发布，不生成页面（访问时 404）
+  const posts = await getCollection("posts", (entry: CollectionEntry<"posts">) => entry.data.public !== false);
+  return posts.map((entry: CollectionEntry<"posts">) => ({ params: { slug: entry.id }, props: { id: entry.id } }));
 }
 
 const { id } = Astro.props;
@@ -61,19 +63,47 @@ function postCover(p: (typeof allPosts)[0] | null): string {
 const showTocCfg = t.toc?.post ?? true;
 const showToc = !!(t.aside?.enable && showTocCfg && headings.length > 0);
 const tocNumber = d.toc_number !== undefined ? d.toc_number : t.toc?.number;
-function tocHtml(nodes: typeof headings): string {
+interface TocNode extends MarkdownHeading {
+  children: TocNode[];
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[char] || char);
+}
+
+function tocHtml(nodes: MarkdownHeading[]): string {
   if (!nodes.length) return "";
-  const items = nodes
-    .map((h) => {
-      const sub = h.subheadings && h.subheadings.length ? `<ul class="toc-child">${tocHtml(h.subheadings)}</ul>` : "";
-      return `<li class="toc-item toc-level-${h.depth}"><a class="toc-link" href="#${h.slug}"><span class="toc-text">${h.text}</span></a>${sub}</li>`;
+
+  const roots: TocNode[] = [];
+  const stack: TocNode[] = [];
+  for (const heading of nodes) {
+    const node: TocNode = { ...heading, children: [] };
+    while (stack.length && stack[stack.length - 1].depth >= node.depth) stack.pop();
+    const parent = stack[stack.length - 1];
+    if (parent) parent.children.push(node);
+    else roots.push(node);
+    stack.push(node);
+  }
+
+  const renderNodes = (items: TocNode[]): string => items
+    .map((heading) => {
+      const children = heading.children.length
+        ? `<ul class="toc-child">${renderNodes(heading.children)}</ul>`
+        : "";
+      return `<li class="toc-item toc-level-${heading.depth}"><a class="toc-link" href="#${encodeURIComponent(heading.slug)}"><span class="toc-text">${escapeHtml(heading.text)}</span></a>${children}</li>`;
     })
     .join("");
-  return `<ul class="toc-list ${tocNumber ? "" : "toc-no-number"}">${items}</ul>`;
+
+  return `<ul class="toc-list ${tocNumber ? "" : "toc-no-number"}">${renderNodes(roots)}</ul>`;
 }
 const toc = tocHtml(headings);
 
-const dateFmt = (site as any).date_format || "YYYY-MM-DD";
 const postUpdate = d.updated ? fullDate(d.updated) : "";
 const contentBody = (entry as any).body || "";
 
@@ -166,7 +196,7 @@ const weiboShare = `https://service.weibo.com/share/share.php?title=${encodeURIC
                   </li>
                 ))}
               </ul>
-              <a class="reward-main-btn" href="/about/#about-reward" target="_blank">
+              <a class="reward-main-btn" href={url_for("about/#about-reward")} target="_blank">
                 <div class="reward-text">{_p("reward.list")}</div>
                 <div class="reward-dec">{_p("reward.list_desc")}</div>
               </a>

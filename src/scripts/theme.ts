@@ -4,8 +4,17 @@
 // toggles). This replaces the original pjax-dependent main.js with a
 // static, dependency-free equivalent.
 
+// Keep this side-effect script a module so TypeScript does not merge its
+// globals with the post-page runtime during project-wide type checking.
+export {};
+
 const G = (window as any).GLOBAL_CONFIG || {};
 const anzhiyu: any = {};
+
+function legacyCopy(): boolean {
+  const command = Reflect.get(document, "execCommand");
+  return typeof command === "function" && command.call(document, "copy");
+}
 
 function scrollToDest(target: number, time = 500) {
   const current = window.scrollY || document.documentElement.scrollTop;
@@ -65,6 +74,33 @@ anzhiyu.changeSayHelloText = function () {
   if (el) el.textContent = el.textContent ? "" : "你好呀";
 };
 
+// ---- footer runtime badge（运行时间徽章, mirrors the original runtime.js） ----
+function initFooterRuntime() {
+  const cfg = G.footerRuntime;
+  const el = document.getElementById("runtimeTextTip");
+  if (!cfg || !cfg.launchTime || !el) return;
+  // 支持 "YYYY/MM/DD HH:mm:ss" / "MM/DD/YYYY HH:mm:ss" / ISO 等格式
+  const raw = String(cfg.launchTime).replace(/-/g, "/");
+  const parts = raw.split(/[ /]/).map(Number);
+  const launch =
+    parts.length >= 3 && parts.slice(0, 3).every((n) => Number.isFinite(n))
+      ? parts[0] > 31 // YYYY/MM/DD
+        ? new Date(parts[0], parts[1] - 1, parts[2], parts[3] || 0, parts[4] || 0, parts[5] || 0)
+        : new Date(parts[2], parts[0] - 1, parts[1], parts[3] || 0, parts[4] || 0, parts[5] || 0) // MM/DD/YYYY
+      : new Date(raw);
+  if (Number.isNaN(+launch)) return;
+  const render = () => {
+    const diff = Math.max(0, Date.now() - +launch);
+    const days = Math.floor(diff / 864e5);
+    const hours = Math.floor((diff % 864e5) / 36e5);
+    const minutes = Math.floor((diff % 36e5) / 6e4);
+    const seconds = Math.floor((diff % 6e4) / 1e3);
+    el.textContent = `本站居然运行了 ${days} 天 ${hours} 小时 ${minutes} 分 ${seconds} 秒`;
+  };
+  render();
+  window.setInterval(render, 1000);
+}
+
 // ---- dark mode ----
 function applyDark(dark: boolean) {
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
@@ -72,7 +108,6 @@ function applyDark(dark: boolean) {
 }
 function initDark() {
   const saved = (() => { try { return localStorage.getItem("theme"); } catch { return null; } })();
-  const mode = (window as any).GLOBAL_CONFIG_SITE;
   if (saved) applyDark(saved === "dark");
   else if (G.autoDarkmode) applyDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
 
@@ -168,20 +203,24 @@ function loadScript(src: string): Promise<void> {
   });
 }
 
+// 本地 vendor 路径（public/js/vendor，同源加载，替代第三方 CDN）
+const vendor = (file: string) => `${import.meta.env.BASE_URL}js/vendor/${file}`;
+
 function initSubtitleType() {
   const cfg = G.subtitle;
   const el = document.getElementById("subtitle");
   if (!cfg || !el) return;
+  const subtitleEl = el;
   const sub: string[] = Array.isArray(cfg.sub) ? cfg.sub : [];
   const strings = sub.length ? sub : [""];
   if (!cfg.effect) {
-    el.textContent = strings[0];
+    subtitleEl.textContent = strings[0];
     return;
   }
   const start = () => {
     const TypedCtor = (window as any).Typed;
     if (typeof TypedCtor !== "function") {
-      el.textContent = strings[0];
+      subtitleEl.textContent = strings[0];
       return;
     }
     new TypedCtor("#subtitle", {
@@ -194,16 +233,9 @@ function initSubtitleType() {
   };
   if (typeof (window as any).Typed === "function") start();
   else
-    loadScript("https://cdn.cbd.int/typed.js@2.1.0/dist/typed.umd.js")
+    loadScript(vendor("typed.umd.min.js"))
       .then(start)
-      .catch(() => {
-        tryLoadTypedFallback();
-      });
-  function tryLoadTypedFallback() {
-    loadScript("https://cdn.jsdelivr.net/npm/typed.js@2.1.0/dist/typed.umd.js")
-      .then(start)
-      .catch(() => (el.textContent = strings[0]));
-  }
+      .catch(() => { subtitleEl.textContent = strings[0]; });
 }
 
 // ---- progressive header background (首页一图流渐进加载, mirrors imgloaded.js) ----
@@ -255,14 +287,18 @@ function initProgressiveHeader() {
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 }
 
-// ---- lazyload (vanilla-lazyload, 与原主题一致: img 进入视口后标记 loading → loaded) ----
+// ---- lazyload (only images explicitly using data-lazy-src) ----
 function initLazyload() {
   if (!G.islazyload) return;
   const init = () => {
     const LL = (window as any).LazyLoad;
     if (typeof LL !== "function") return;
     (window as any).lazyLoadInstance = new LL({
-      elements_selector: "img",
+      // Regular Astro images already have a usable `src`. Selecting every
+      // image lets Vanilla LazyLoad treat covers without data-lazy-src as
+      // lazy candidates, which can leave otherwise valid remote covers in an
+      // inconsistent state.
+      elements_selector: "img[data-lazy-src]",
       threshold: 0,
       data_src: "lazy-src",
     });
@@ -271,13 +307,7 @@ function initLazyload() {
     init();
     return;
   }
-  loadScript("https://cdn.cbd.int/vanilla-lazyload@17.8.5/dist/lazyload.iife.min.js")
-    .then(init)
-    .catch(() =>
-      loadScript("https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.8.5/dist/lazyload.iife.min.js")
-        .then(init)
-        .catch(() => {})
-    );
+  loadScript(vendor("lazyload.iife.min.js")).then(init).catch(() => {});
 }
 
 // ---- code block tools (代码块工具栏: 展开/折叠 + 语言 + 复制, mirrors addHighlightTool) ----
@@ -319,7 +349,7 @@ function initHighlightTools() {
       selection?.removeAllRanges();
       selection?.addRange(range);
       try {
-        document.execCommand("copy");
+        if (!legacyCopy()) throw new Error("Legacy copy command is unavailable");
         alertInfo(tools, G.copy?.success || "复制成功");
       } catch {
         alertInfo(tools, G.copy?.noSupport || "浏览器不支持");
@@ -382,6 +412,7 @@ function init() {
   initProgressiveHeader();
   initLazyload();
   initHighlightTools();
+  initFooterRuntime();
   updateScroll();
   window.addEventListener("scroll", updateScroll, { passive: true });
 

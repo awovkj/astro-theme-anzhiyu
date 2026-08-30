@@ -1,0 +1,9 @@
+/* !!! 自动生成（scripts/subset-font.cjs → subset-extra.py），勿手改 !!!
+ * hhh-extra：补充 hhh 源字体缺失的字形（符号/花体/假名），
+ * 通过 unicode-range 按码位分流，仅在页面用到对应字符时才下载。 */
+@font-face {
+  font-family: "hhh-extra";
+  font-display: swap;
+  src: url("/font/hhh-extra-sym.woff2") format("woff2");
+  unicode-range: U+00A9;
+}

@@ -350,36 +350,38 @@ if hexo-config('avatar.effect') == true
     transform: scale(.97);
 
 @keyframes animate-in-and-out
-  entry 0%
+  0%
     opacity: 0.5;
     transform: scaleX(0.9);
 
-  entry 100%
+  100%
     opacity: 1;
     transform: scaleX(1);
 
-@keyframes header
-  entry 0% {
+@keyframes header-entry
+  0% {
     --anzhiyu-header-translateY: 160px
     --anzhiyu-header-info-scale: 0.7
     --anzhiyu-header-cover-scale: 1
   }
 
-  entry 100% {
+  100% {
     --anzhiyu-header-translateY: 0px
     --anzhiyu-header-info-scale: 1
-      --anzhiyu-header-cover-scale: 2
-  }
-  exit 100% {
-    --anzhiyu-header-translateY: 160px
-    --anzhiyu-header-info-scale: 0.7
-      --anzhiyu-header-cover-scale: 1
+    --anzhiyu-header-cover-scale: 2
   }
 
-  exit 0% {
+@keyframes header-exit
+  0% {
     --anzhiyu-header-translateY: 0px
     --anzhiyu-header-info-scale: 1
-      --anzhiyu-header-cover-scale: 2
+    --anzhiyu-header-cover-scale: 2
+  }
+
+  100% {
+    --anzhiyu-header-translateY: 160px
+    --anzhiyu-header-info-scale: 0.7
+    --anzhiyu-header-cover-scale: 1
   }
 
 @keyframes post-info-slide-in

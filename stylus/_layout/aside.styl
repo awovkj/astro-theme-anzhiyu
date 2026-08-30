@@ -49,14 +49,14 @@
       .author-info__name
         text-align: left;
         font-weight: 700;
-        color: var(--anzhiyu-white);
+        color: var(--anzhiyu-fontcolor);
         font-size: 20px;
         line-height: 1;
         margin-bottom: 5px;
         margin-top: 0
       .author-info__desc
         font-size: 12px;
-        color: var(--anzhiyu-white);
+        color: var(--anzhiyu-fontcolor);
         opacity: .6;
         line-height: 1;
 
@@ -68,7 +68,7 @@
       padding: 1rem 1.2rem;
       opacity: 0;
       transition: .3s;
-      color: var(--anzhiyu-white);
+      color: var(--anzhiyu-fontcolor);
 
     .banner-button-group .banner-button 
       padding: 20px 12px;
@@ -121,8 +121,8 @@
         cursor: pointer;
         display: flex;
         i, svg
-          background: var(--anzhiyu-white-op);
-          color: var(--anzhiyu-white);
+          background: var(--anzhiyu-secondbg);
+          color: var(--anzhiyu-fontcolor);
           font-size: 1rem;
           width: 40px;
           height: 40px;
@@ -133,9 +133,9 @@
           padding: 8px;
           border-radius: 32px;
           &:hover
-            background: var(--anzhiyu-secondbg);
+            background: var(--anzhiyu-main);
             transform: scale(1.1);
-            color: var(--anzhiyu-main);
+            color: var(--anzhiyu-white);
             box-shadow: none;
 
     #card-info-btn
@@ -426,7 +426,6 @@
   position: absolute;
   opacity: 1;
   transition: .3s;
-  border: var(--style-border-avatar);
 
   img
     width: 100%
@@ -539,16 +538,6 @@ if hexo-config('aside.enable')
         padding: 1rem 1.2rem;
         min-height: 320px;
         position: relative;
-      &::before
-        background: linear-gradient(-25deg,var(--anzhiyu-main),var(--anzhiyu-main-op-deep),var(--anzhiyu-main),var(--anzhiyu-main-op-deep));
-        background-size: 400%;
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        left: 0;
-        top: 0;
-        content: '';
-        animation: gradient 15s ease infinite;
     .card-info
       &:hover 
         .author-info-avatar
@@ -571,10 +560,10 @@ if hexo-config('aside.enable')
         position: relative
         +maxWidth768()
           display: none
-      #author-info__sayhi 
+      #author-info__sayhi
         text-align: left;
-        color: var(--anzhiyu-white);
-        background: var(--anzhiyu-white-op);
+        color: var(--anzhiyu-fontcolor);
+        background: var(--anzhiyu-secondbg);
         font-size: 12px;
         margin: auto;
         padding: 2px 8px;
@@ -584,8 +573,8 @@ if hexo-config('aside.enable')
         transition: 0.3s;
         user-select: none
         &:hover
-          background: var(--anzhiyu-card-bg);
-          color: var(--anzhiyu-fontcolor);
+          background: var(--anzhiyu-main);
+          color: var(--anzhiyu-white);
           transform: scale(1.1);
 
       .banner-button-group .banner-button

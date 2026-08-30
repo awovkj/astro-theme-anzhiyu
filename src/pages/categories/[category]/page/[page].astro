@@ -14,7 +14,7 @@ export async function getStaticPaths() {
     const total = Math.max(1, Math.ceil(posts.length / perPage));
     for (let i = 2; i <= total; i++) {
       paths.push({
-        params: { category: encodeURIComponent(c.name), page: String(i) },
+        params: { category: c.name, page: String(i) },
         props: { name: c.name, current: i, total, perPage },
       });
     }

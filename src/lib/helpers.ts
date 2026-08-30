@@ -8,9 +8,23 @@ import type { PostItem, TagInfo, CategoryInfo, ArchiveItem } from "./collections
  * ------------------------------------------------------------------ */
 export function url_for(p?: string | null): string {
   if (!p) return site.root;
-  if (/^(https?:)?\/\//.test(p) || p.startsWith("#") || p.startsWith("javascript:")) return p;
+  // Leave absolute/protocol URLs and document-local anchors untouched.  The
+  // generic URI-scheme branch is deliberately restricted so a configured or
+  // content-provided `javascript:` URL cannot become an executable href.
+  if (/^\/\//.test(p) || /^(?:https?:|mailto:|tel:|ftp:)/i.test(p) || /^data:image\//i.test(p) || p.startsWith("#")) return p;
+  if (/^[a-z][a-z\d+.-]*:/i.test(p)) return "#";
   if (p.startsWith("/")) return (site.root.replace(/\/$/, "") + p).replace(/\/\//g, "/");
   return (site.root.replace(/\/$/, "") + "/" + p.replace(/^\//, "")).replace(/\/\//g, "/");
+}
+
+/** Escape text interpolated into helper-generated HTML fragments. */
+export function escape_html(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export function is_current(path: string, currentPath: string, strict = false): boolean {
@@ -108,7 +122,7 @@ export function cloudTags(opts: {
       const c = color ? palette[i % palette.length] : "";
       const style = `font-size: ${size}${unit};` + (c ? ` color: ${c};` : "");
       const hl = highlightTags.includes(t.name) ? " highlight" : "";
-      return `<a href="${url_for("/" + t.path)}" style="${style}" class="article-tag${hl}">${t.name}</a>`;
+      return `<a href="${escape_html(url_for("/" + t.path))}" style="${style}" class="article-tag${hl}">${escape_html(t.name)}</a>`;
     })
     .join("");
 }
@@ -127,7 +141,7 @@ export function aside_categories(categories: CategoryInfo[], opts: { limit?: num
     .slice(0, limit)
     .map(
       (c) =>
-        `<li class="card-category-list-item"><a class="card-category-list-link" href="${url_for(c.path)}"><span class="card-category-list-name">${c.name}</span><span class="card-category-list-count">${c.length}</span></a></li>`
+        `<li class="card-category-list-item"><a class="card-category-list-link" href="${escape_html(url_for(c.path))}"><span class="card-category-list-name">${escape_html(c.name)}</span><span class="card-category-list-count">${c.length}</span></a></li>`
     )
     .join("");
   return `<div class="item-headline"><i class="anzhiyufont anzhiyu-icon-folder-open"></i><span>${_p(
@@ -164,8 +178,9 @@ export function aside_archives(
     .map((it) => {
       let url = `${site.archive_dir}/${it.year}/`;
       if (type === "monthly") url += `${pad(it.month)}/`;
-      const label = opts.transform ? opts.transform(it.name) : (type === "monthly" ? `${it.year}年${it.month}月` : `${it.year}年`);
-      return `<li class="card-archive-list-item"><a class="card-archive-list-link" href="${url_for(url)}"><span class="card-archive-list-date">${label}</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">${it.count}</span><span>篇</span></div></a></li>`;
+      const archiveDate = new Date(it.year, type === "monthly" ? it.month - 1 : 0, 1);
+      const label = opts.transform ? opts.transform(it.name) : formatDate(archiveDate, format);
+      return `<li class="card-archive-list-item"><a class="card-archive-list-link" href="${escape_html(url_for(url))}"><span class="card-archive-list-date">${escape_html(label)}</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">${it.count}</span><span>篇</span></div></a></li>`;
     })
     .join("");
   const moreBtn =
@@ -185,14 +200,14 @@ export function tags_page_list(tags: TagInfo[]): string {
   return sorted
     .map(
       (t) =>
-        `<a href="/${t.path}" id="/${t.path}"><span class="tags-punctuation">#</span>${t.name}<span class="tagsPageCount">${t.length}</span></a>`
+        `<a href="${escape_html(url_for(t.path))}" id="${escape_html(url_for(t.path))}"><span class="tags-punctuation">#</span>${escape_html(t.name)}<span class="tagsPageCount">${t.length}</span></a>`
     )
     .join("");
 }
 
 export function catalog_list(categories: CategoryInfo[]): string {
   return categories
-    .map((c) => `<div class="catalog-list-item" id="/${c.path}"><a href="/${c.path}">${c.name}</a></div>`)
+    .map((c) => `<div class="catalog-list-item" id="${escape_html(url_for(c.path))}"><a href="${escape_html(url_for(c.path))}">${escape_html(c.name)}</a></div>`)
     .join("");
 }
 
@@ -222,8 +237,7 @@ export function sort_attr_post(type: "swiper_list" | "top_group_list", posts: Po
       return [...arr, ...extra];
     }
     if (arr.length > targetLength) {
-      const extra = posts.filter((p) => !arr.slice(0, targetLength).includes(p)).slice(0, arr.length - targetLength);
-      return [...arr.slice(0, targetLength), ...extra];
+      return arr.slice(0, targetLength);
     }
     return arr;
   };
@@ -250,7 +264,7 @@ export function related_posts(current: PostItem, all: PostItem[], limit = 6): st
       const cover = post.cover === false ? (post as any).randomcover : post.cover;
       const src = cover ? url_for(String(cover)) : "";
       const title = post.title;
-      return `<div><a href="${url_for(post.path)}" title="${title}"><img class="cover" src="${src}" alt="cover"${
+      return `<div><a href="${escape_html(url_for(post.path))}" title="${escape_html(title)}"><img class="cover" src="${escape_html(src)}" alt="cover"${
         cover ? "" : ' onerror="this.style.opacity=0.2"'
       }></a></div>`;
     })

@@ -2,6 +2,25 @@ import { theme } from "./theme";
 import { site } from "./site";
 import { _p } from "./i18n";
 
+function rootPath(path: string): string {
+  if (/^(?:https?:)?\/\//i.test(path)) return path;
+  const root = site.root.replace(/\/$/, "");
+  return `${root}/${path.replace(/^\//, "")}`.replace(/\/\//g, "/");
+}
+
+/**
+ * launch_time 在 YAML 中可能是字符串（"04/01/2021"）或 Date（2025-10-10 11:08:06）。
+ * Date 会被 JSON 序列化为 UTC ISO 串导致客户端时区偏移，这里统一还原为
+ * 本地时区的 "YYYY/MM/DD HH:mm:ss" 文本。
+ */
+function normalizeLaunchTime(v: unknown): string {
+  if (v instanceof Date) {
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${v.getFullYear()}/${p(v.getMonth() + 1)}/${p(v.getDate())} ${p(v.getHours())}:${p(v.getMinutes())}:${p(v.getSeconds())}`;
+  }
+  return v == null ? "" : String(v);
+}
+
 /**
  * Mirrors the original `GLOBAL_CONFIG` injected into <head> by
  * includes/head/config.pug. Only the fields the ported client runtime reads
@@ -25,7 +44,9 @@ export function globalConfig(): Record<string, any> {
     },
     mainTone: t.mainTone && t.mainTone.enable ? t.mainTone : undefined,
     authorStatus: t.author_status && t.author_status.enable ? { skills: t.author_status.skills } : undefined,
-    localSearch: t.local_search && t.local_search.enable ? { path: t.local_search.path || "/search.json", preload: !!t.local_search.preload } : undefined,
+    localSearch: t.local_search && t.local_search.enable
+      ? { path: rootPath(t.local_search.CDN || t.local_search.path || "search.json"), preload: !!t.local_search.preload }
+      : undefined,
     translate: t.translate && t.translate.enable ? t.translate : undefined,
     peoplecanvas: t.peoplecanvas && t.peoplecanvas.enable ? { enable: true, img: t.peoplecanvas.img } : undefined,
     noticeOutdate: t.noticeOutdate && t.noticeOutdate.enable ? t.noticeOutdate : undefined,
@@ -40,6 +61,7 @@ export function globalConfig(): Record<string, any> {
       post: t.post_meta?.post?.date_format === "relative",
     },
     runtime: t.runtimeshow && t.runtimeshow.enable ? _p("aside.card_webinfo.runtime.unit") : "",
+    footerRuntime: t.footer?.runtime?.enable ? { launchTime: normalizeLaunchTime(t.footer.runtime.launch_time) } : undefined,
     date_suffix: {
       just: _p("date_suffix.just"),
       min: _p("date_suffix.min"),

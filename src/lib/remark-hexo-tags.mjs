@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Remark plugin: convert Hexo tag-plugin syntax ({% note %}...{% endnote %},
  * {% tabs %}, <!-- tab --> ...) into raw HTML whose class names mirror the
  * original anzhiyu scripts/tag/*.js output, so theme.css applies unchanged.
@@ -411,6 +411,11 @@ function processItems(items) {
       i++;
       continue;
     }
+    if (it.k === "paraBreak") {
+      flushPara(para, out);
+      i++;
+      continue;
+    }
     if (it.k === "text") {
       if (it.v) para.push({ type: "text", value: it.v });
       i++;
@@ -434,8 +439,9 @@ function processItems(items) {
     }
     if (it.k === "node") {
       const n = it.node;
+      // 先冲刷待输出段落，保持段落与标题/列表等块级节点的文档顺序
+      flushPara(para, out);
       if (n.children && (n.type === "blockquote" || n.type === "listItem")) {
-        flushPara(para, out);
         out.push({ ...n, children: processNodes(n.children) });
       } else {
         out.push(n);
@@ -451,7 +457,11 @@ function processItems(items) {
 
 function processNodes(nodes) {
   const items = [];
-  for (const n of nodes) decomposeNode(n, items);
+  for (const n of nodes) {
+    // 段落边界标记：防止相邻段落被 processItems 合并进同一个 <p>
+    if (n.type === "paragraph") items.push({ k: "paraBreak" });
+    decomposeNode(n, items);
+  }
   return processItems(items);
 }
 

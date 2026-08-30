@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "check": "astro check",
+    "validate": "npm run check && npm run build",
     "preview": "astro preview",
     "compile:css": "node scripts/compile-css.cjs",
     "subset:font": "node scripts/subset-font.cjs"
@@ -17,16 +19,22 @@
     "Card UI Design",
     "blog"
   ],
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=9.6.5"
+  },
   "dependencies": {
-    "astro": "^5.0.0",
-    "js-yaml": "^4.1.0"
+    "@astrojs/markdown-remark": "^7.2.4",
+    "astro": "^7.2.6",
+    "js-yaml": "^4.3.1"
   },
   "devDependencies": {
-    "cssnano": "^7.1.9",
+    "@astrojs/check": "^0.9.10",
+    "@types/js-yaml": "^4.0.9",
     "csso": "^5.0.5",
     "nib": "^1.2.0",
-    "postcss": "^8.5.26",
-    "stylus": "^0.63.0"
+    "stylus": "^0.63.0",
+    "typescript": "^5.9.3"
   },
   "license": "GPL-3.0"
 }

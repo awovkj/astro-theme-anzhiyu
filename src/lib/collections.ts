@@ -13,6 +13,8 @@ export interface PostItem {
   /** raw HTML body (rendered by Astro via render()) */
   body?: string;
   // optional ordering hints
+  /** pinned priority: bigger = higher, undefined/0 = normal date order */
+  top?: number;
   top_group_index?: number;
   swiper_index?: number;
   [key: string]: any;
@@ -59,6 +61,7 @@ function entryToPost(e: CollectionEntry<"posts">): PostItem {
     description: d.description,
     // raw markdown body — consumed by index excerpt / swiper text
     content: (e as any).body || "",
+    top: d.top,
     top_group_index: (d as any).top_group_index,
     swiper_index: (d as any).swiper_index,
     _entry: e,
@@ -68,7 +71,7 @@ function entryToPost(e: CollectionEntry<"posts">): PostItem {
 /** Load + normalize all posts and derive tags/categories (memoized per build). */
 export async function loadData(): Promise<ThemeData> {
   if (_cache) return _cache;
-  const entries = await getCollection("posts", ({ data }) => !data.hide);
+  const entries = await getCollection("posts", (entry: CollectionEntry<"posts">) => !entry.data.hide && entry.data.public !== false);
   const posts: PostItem[] = entries.map(entryToPost);
 
   // tags
@@ -89,9 +92,11 @@ export async function loadData(): Promise<ThemeData> {
   return _cache;
 }
 
-/** Posts sorted newest-first. */
+/** Posts sorted pinned-first (top desc), then newest-first. */
 export function sortedPosts(posts: PostItem[]): PostItem[] {
-  return [...posts].sort((a, b) => +b.date - +a.date);
+  return [...posts].sort(
+    (a, b) => (b.top ?? 0) - (a.top ?? 0) || +b.date - +a.date
+  );
 }
 
 /** Group posts by year (desc) then by month — used by the archives page. */

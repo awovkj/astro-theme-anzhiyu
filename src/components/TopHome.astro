@@ -19,7 +19,9 @@ const swiperEnable = !!(homeTop.swiper && homeTop.swiper.enable);
 const banner = homeTop.banner || {};
 const peoplecanvas = t.peoplecanvas && t.peoplecanvas.enable ? t.peoplecanvas : null;
 const topGroup = sort_attr_post("top_group_list", posts).slice(0, swiperEnable ? 4 : 6);
-const indexContentLen = (t.index_post_content as number) || 200;
+// `index_post_content` is a config object; reading it as a number coerces the
+// value to NaN and makes String#substring return an empty excerpt.
+const indexContentLen = Number(t.index_post_content?.length) || 200;
 ---
 
 {homeTop.enable && (
@@ -60,7 +62,7 @@ const indexContentLen = (t.index_post_content as number) || 200;
               {sort_attr_post("swiper_list", posts).map((item) => (
                 <div class="blog-slider__item swiper-slide">
                   <a class="blog-slider__img" href={url_for(item.path)} title={item.title}>
-                    <img width="48" height="48" src={String(item.cover || "")} alt="图片" />
+                    {item.cover && <img width="48" height="48" src={url_for(String(item.cover))} alt="图片" />}
                   </a>
                   <div class="blog-slider__content">
                     <span class="blog-slider__code">{item.date.toISOString().slice(0, 10)}</span>
@@ -70,12 +72,12 @@ const indexContentLen = (t.index_post_content as number) || 200;
                       if (content.length > indexContentLen) expert += " ...";
                       return (
                         <>
-                          <a class="blog-slider__title" href={url_for(item.path)} alt={item.title}>{item.title}</a>
+                          <a class="blog-slider__title" href={url_for(item.path)} title={item.title}>{item.title}</a>
                           <div class="blog-slider__text">{item.description || expert}</div>
                         </>
                       );
                     })()}
-                    <a class="blog-slider__button" href={url_for(item.path)} alt={item.title}>详情</a>
+                    <a class="blog-slider__button" href={url_for(item.path)} title={item.title}>详情</a>
                   </div>
                 </div>
               ))}
@@ -85,7 +87,7 @@ const indexContentLen = (t.index_post_content as number) || 200;
             {topGroup.map((item) => (
               <div class="top-group-list-item">
                 <div class="post_cover left_radius">
-                  <a href={url_for(item.path)} title={item.title}><span class="top-group-text">荐</span><img class="post_bg" alt={item.title} src={String(item.cover || "")} /></a>
+                  <a href={url_for(item.path)} title={item.title}><span class="top-group-text">荐</span>{item.cover && <img class="post_bg" alt={item.title} src={url_for(String(item.cover))} />}</a>
                 </div>
                 <div class="top-group-info"><a class="article-title" href={url_for(item.path)} title={item.title}>{item.title}</a></div>
               </div>
@@ -100,7 +102,7 @@ const indexContentLen = (t.index_post_content as number) || 200;
           {topGroup.map((item) => (
             <div class="recent-post-item">
               <div class="post_cover left_radius">
-                <a href={url_for(item.path)} title={item.title}><span class="recent-post-top-text">荐</span><img class="post_bg" alt="cover" src={String(item.cover || "")} /></a>
+                <a href={url_for(item.path)} title={item.title}><span class="recent-post-top-text">荐</span>{item.cover && <img class="post_bg" alt="cover" src={url_for(String(item.cover))} />}</a>
               </div>
               <div class="recent-post-info"><a class="article-title" href={url_for(item.path)} title={item.title}>{item.title}</a></div>
             </div>
@@ -112,7 +114,7 @@ const indexContentLen = (t.index_post_content as number) || 200;
             </div>
             <img class="todayCard-cover" src={url_for(banner.image || "")} alt="封面" />
             <div class="banner-button-group">
-              <div class="banner-button" onclick="event.stopPropagation();event.preventDefault();anzhiyu.hideTodayCard();">
+              <div class="banner-button" onclick="anzhiyu.hideTodayCard(); return false;">
                 <i class="anzhiyufont anzhiyu-icon-arrow-circle-right"></i>
                 <span class="banner-button-text">更多推荐</span>
               </div>
@@ -125,8 +127,8 @@ const indexContentLen = (t.index_post_content as number) || 200;
 )}
 
 {homeTop.enable && peoplecanvas && (
-  <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script is:inline src={url_for("js/vendor/gsap.min.js")}></script>
 )}
 {homeTop.enable && peoplecanvas && (
-  <script is:inline defer src="/js/anzhiyu/people.js"></script>
+  <script is:inline defer src={url_for("js/anzhiyu/people.js")}></script>
 )}

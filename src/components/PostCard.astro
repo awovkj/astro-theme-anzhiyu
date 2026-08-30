@@ -47,7 +47,7 @@ const sticky = (article as any).sticky > 0 || (article as any).top;
         )}
         {pm.categories && article.categories.length > 0 && article.categories.map((c) => <span class="article-categories-original">{c}</span>)}
         {new_post && <span class="newPost">{_p("post.new")}</span>}
-        <a class="unvisited-post" href={url_for(link)} title={title}>{_p("post.unread")}</a>
+        {pm.unread && <a class="unvisited-post" href={url_for(link)} title={title}>{_p("post.unread")}</a>}
       </div>
       <a class="article-title" href={url_for(link)} title={title}>{title}</a>
     </div>
@@ -87,6 +87,6 @@ const sticky = (article as any).sticky > 0 || (article as any).top;
         </span>
       )}
     </div>
-    {method !== false && <div class="content" set:html={content} />}
+    {method !== false && content && <div class="content" set:html={content} />}
   </div>
 </div>

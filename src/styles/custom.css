@@ -64,24 +64,23 @@
 }
 
 /* 全站自定义字体 hhh（对齐 awovkj.github.io）
- * 子集化：5.75MB TTF → 323KB WOFF2（覆盖全站文案字符集 1033 字）
- * 生成命令见 scripts/subset-font.md；重跑前先收集新字符集 */
+ * 子集化：源字体在 scripts/fonts/hhh.ttf，产物仅 woff2 单格式
+ * （覆盖 98%+ 现代浏览器）；重跑：npm run subset:font
+ * 注意：hhh 后必须跟系统回退栈，否则子集缺字会落入浏览器默认衬线体。 */
 @font-face {
   font-family: "hhh";
   font-display: swap;
-  src: url("/font/hhh-subset.woff2") format("woff2"),
-    url("/font/hhh-subset.woff") format("woff"),
-    url("/font/hhh-subset.ttf") format("truetype");
+  src: url("/font/hhh-subset.woff2") format("woff2");
 }
 body {
-  font-family: hhh;
+  font-family: hhh, hhh-extra, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Lato, Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
 }
 #site-title,
 #site-subtitle,
 #site-name,
 #aside-content .author-info__name,
 #aside-content .author-info__description {
-  font-family: hhh;
+  font-family: hhh, hhh-extra, PingFang SC, "Hiragino Sans GB", "Microsoft JhengHei", "Microsoft YaHei", sans-serif;
 }
 
 /* 代码块：figure.highlight 包裹 shiki pre 的适配 */
@@ -96,7 +95,7 @@ body {
 }
 
 /* ============================================================
- * 代码块美化：catppuccin 双主题配色 + 圆角/阴影/滚动条
+ * 代码块美化：自定义双主题配色（见 src/lib/shiki-themes.mjs）+ 圆角/阴影/滚动条
  * ============================================================ */
 #article-container figure.highlight {
   border-radius: 8px;
@@ -136,7 +135,7 @@ body {
   background: var(--anzhiyu-main);
 }
 
-/* 深色模式：切换到 shiki dark 主题变量（catppuccin-mocha） */
+/* 深色模式：切换到 shiki dark 主题变量（blog-dark） */
 html[data-theme="dark"] #article-container .astro-code,
 html[data-theme="dark"] #article-container .astro-code span {
   color: var(--shiki-dark) !important;
@@ -288,6 +287,167 @@ html[data-theme="dark"] #article-container .astro-code span {
     display: none;
     visibility: hidden;
   }
+}
+
+/* ============================================================
+ * 侧边栏 NotionNext heo 风格（最新发布 / 标签 / 统计卡片）
+ * ============================================================ */
+
+/* 卡片容器：白底 + 细边框 + 圆角，悬停边框变靛蓝（暗色变黄） */
+#aside-content .card-widget:not(.card-info) {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+#aside-content .card-widget:not(.card-info):hover {
+  border-color: #4f46e5;
+  box-shadow: none;
+  transform: none;
+}
+[data-theme="dark"] #aside-content .card-widget:not(.card-info) {
+  background: #1e1e1e;
+  border-color: #374151;
+}
+[data-theme="dark"] #aside-content .card-widget:not(.card-info):hover {
+  border-color: #d97706;
+}
+/* 渐变作者卡保持原效果，仅统一圆角、去掉边框 */
+#aside-content > .card-widget.card-info {
+  border-radius: 12px;
+  border-color: transparent;
+}
+
+/* 卡片标题（对齐 LatestPostsGroupMini 头部） */
+.nn-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 4px;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+.nn-card-header i {
+  margin-right: 8px;
+}
+
+/* 最新发布列表：封面缩略图 + 两行标题 + 灰色日期 */
+.nn-latest-item {
+  display: flex;
+  align-items: center;
+  margin: 12px 0;
+  text-decoration: none;
+}
+.nn-latest-cover {
+  width: 80px;
+  height: 56px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.nn-latest-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.nn-latest-info {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+}
+.nn-latest-item.no-cover .nn-latest-info {
+  padding-left: 0;
+}
+.nn-latest-title {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--font-color);
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  transition: color 0.2s;
+}
+.nn-latest-item:hover .nn-latest-title {
+  color: #4f46e5;
+}
+[data-theme="dark"] .nn-latest-title {
+  color: #e5e7eb;
+}
+[data-theme="dark"] .nn-latest-item:hover .nn-latest-title {
+  color: #d97706;
+}
+.nn-latest-date {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* 标签组：胶囊样式，悬停蓝底白字放大（暗色黄底） */
+.nn-tags-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 2px;
+}
+.nn-tag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--font-color);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+.nn-tag:hover {
+  background: #2563eb;
+  color: #fff;
+  transform: scale(1.1);
+}
+[data-theme="dark"] .nn-tag {
+  color: #e5e7eb;
+}
+[data-theme="dark"] .nn-tag:hover {
+  background: #d97706;
+  color: #fff;
+}
+.nn-tag sup {
+  margin-left: 4px;
+  font-size: 12px;
+}
+
+/* 标签与统计之间的虚线分隔 */
+.nn-divider {
+  border: none;
+  border-top: 1px dashed #d1d5db;
+  margin: 16px 0;
+}
+[data-theme="dark"] .nn-divider {
+  border-color: #4b5563;
+}
+
+/* 网站统计：两端对齐行（对齐 AnalyticsCard） */
+.nn-analytics {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 12px;
+  font-size: 15px;
+  color: var(--font-color);
+}
+.nn-analytics-row {
+  display: flex;
+  justify-content: space-between;
 }
 
 

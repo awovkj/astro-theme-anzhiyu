@@ -19,10 +19,10 @@ const { isHome = false, isPost = false, title = site.title, topImg = false, subt
 
 const t = theme as any;
 const isHomeClass = topImg === false ? "not-top-img" : isPost ? "post-bg" : isHome ? "full_page" : "not-home-page";
-const homeImg = topImg && topImg.indexOf("/") !== -1 ? url_for(topImg) : topImg || "";
+const homeImg = typeof topImg === "string" && topImg.includes("/") ? url_for(topImg) : "";
 
 // ---- menu items ----
-type MenuItem = { label: string; link: string; icon?: string; anima?: string; child?: MenuItem[] };
+type MenuItem = { label: string; link?: string; icon?: string; anima?: string; child?: MenuItem[] };
 const menu: MenuItem[] = [];
 if (t.menu && typeof t.menu === "object") {
   for (const [label, value] of Object.entries(t.menu)) {
@@ -111,7 +111,7 @@ const consoleTags = (consoleData.tags || []).slice(0, 24);
                   <span>{m.label}</span>
                 </a>
               ) : (
-                <a class="site-page faa-parent animated-hover" href={url_for(m.link)}>
+                <a class="site-page faa-parent animated-hover" href={url_for(m.link || "/")}>
                   {m.icon && iconEl(m.icon, m.anima)?.anzhiyu && (
                     <i class={`anzhiyufont ${m.icon} ${m.anima}`} style="font-size:0.9em;"></i>
                   )}

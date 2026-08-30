@@ -14,7 +14,7 @@ interface Props {
 const { postsCount, tagsCount, categoriesCount, tags } = Astro.props;
 const t = theme as any;
 
-type MenuItem = { label: string; link: string; icon?: string; child?: MenuItem[] };
+type MenuItem = { label: string; link?: string; icon?: string; child?: MenuItem[] };
 const menu: MenuItem[] = [];
 if (t.menu && typeof t.menu === "object") {
   for (const [label, value] of Object.entries(t.menu)) {

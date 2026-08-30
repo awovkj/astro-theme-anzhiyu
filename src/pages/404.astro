@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import { _p } from "../lib/i18n";
+import { url_for } from "../lib/helpers";
 ---
 
 <Base title={_p("error404")} is404={true}>
@@ -13,7 +14,7 @@ import { _p } from "../lib/i18n";
         <div class="error-info">
           <h1 class="error_title">404</h1>
           <div class="error_subtitle">页面走丢了，但它可能只是去旅行了。</div>
-          <a class="error-link" href="/">回到主页</a>
+        <a class="error-link" href={url_for("/")}>回到主页</a>
         </div>
       </div>
     </div>

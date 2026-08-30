@@ -3,6 +3,7 @@ import { theme } from "../lib/theme";
 import { site } from "../lib/site";
 import { _p } from "../lib/i18n";
 import { globalConfig, globalConfigSite } from "../lib/globalConfig";
+import { url_for } from "../lib/helpers";
 
 interface Props {
   title: string;
@@ -36,16 +37,17 @@ const pageCopyright = (site as any).copyright || site.author;
 
 const GLOBAL_CONFIG = globalConfig();
 const GLOBAL_CONFIG_SITE = globalConfigSite({ title: site.title, pageTitle, isPost, isHome, showToc, postUpdate });
+// Use the current route instead of pointing every page's canonical/OG URL at
+// the homepage. Astro.url already includes a configured deployment base path.
+const canonicalUrl = new URL(Astro.url.pathname, site.url).href;
 
-// Icon font (anzhiyu iconfont). Prefer the config value; fall back to the
-// official anzhiyu static CDN so icons render out of the box.
-const iconfontCss =
-(t.asset && t.asset.ali_iconfont_css) || "https://cdn.jsdelivr.net/npm/anzhiyu-theme-static@1.0.9/icon/ali_iconfont_css.css";
+// Icon font (anzhiyu iconfont) — self-hosted under /iconfont (same-origin,
+// no third-party CDN on the render-blocking path).
+const iconfontCss = url_for("/iconfont/ali_iconfont.css");
 ---
 
 <meta charset="UTF-8" />
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>{pageTitle}</title>
 {keywords && <meta name="keywords" content={pageKeywords} />}
 <meta name="author" content={pageAuthor} />
@@ -62,17 +64,17 @@ const iconfontCss =
 <!-- Open Graph -->
 <meta property="og:type" content={isPost ? "article" : "website"} />
 <meta property="og:title" content={pageTitle} />
-<meta property="og:url" content={site.url} />
+<meta property="og:url" content={canonicalUrl} />
 {description && <meta property="og:description" content={description} />}
 <meta property="og:site_name" content={site.title} />
 
-<link rel="canonical" href={site.url} />
-<link rel="icon" href={site.favicon} />
+<link rel="canonical" href={canonicalUrl} />
+<link rel="icon" href={url_for(site.favicon)} />
 
-<link rel="preconnect" href="https://cdn.cbd.int" />
-<link rel="stylesheet" href={iconfontCss} media="print" onload="this.media='all'" />
+<link rel="preload" as="style" href={iconfontCss} />
+<link rel="stylesheet" href={iconfontCss} />
 {(t.icons && t.icons.fontawesome) && (
-  <link rel="stylesheet" href={t.icons.fontawesome} media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href={t.icons.fontawesome} />
 )}
 
 <script is:inline define:vars={{ GLOBAL_CONFIG }}>

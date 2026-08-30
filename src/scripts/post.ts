@@ -1,4 +1,13 @@
+// Keep this side-effect script a module so its local `anzhiyu` binding does not
+// collide with the site-wide runtime when TypeScript checks all source files.
+export {};
+
 const anzhiyu: any = (window as any).anzhiyu || {};
+
+function legacyCopy(): boolean {
+  const command = Reflect.get(document, "execCommand");
+  return typeof command === "function" && command.call(document, "copy");
+}
 
 function getEleTop(ele: HTMLElement): number {
   let actualTop = ele.offsetTop;
@@ -72,7 +81,7 @@ function initPostTools() {
       document.body.appendChild(input);
       input.select();
       try {
-        ok = document.execCommand("copy");
+        ok = legacyCopy();
       } catch {}
       input.remove();
     }
@@ -89,7 +98,7 @@ function initPostTools() {
     }
   };
 
-  // 二维码：qrcodejs 依次尝试 cbd / jsdelivr CDN
+  // 二维码：本地 vendor 加载 qrcodejs（同源，替代第三方 CDN）
   if (!qrcodeEl) return;
   const render = () => {
     const QR = (window as any).QRCode;
@@ -108,9 +117,7 @@ function initPostTools() {
       s.onerror = () => reject(new Error("qrcode load fail"));
       document.head.appendChild(s);
     });
-  load("https://cdn.cbd.int/qrcodejs@1.0.0/qrcode.min.js")
-    .then(render)
-    .catch(() => load("https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js").then(render).catch(() => {}));
+  load(`${import.meta.env.BASE_URL}js/vendor/qrcode.min.js`).then(render).catch(() => {});
 }
 
 function initTocScrollspy() {

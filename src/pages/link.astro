@@ -23,7 +23,7 @@ interface BannerPair {
 }
 function buildBannerPairs(list: LinkGroup[]): BannerPair[] {
   const pairs: BannerPair[] = [];
-  for (const y of [1, 2]) {
+  for (let pass = 0; pass < 2; pass++) {
     for (const g of list.slice(0, 15)) {
       const ll = g.link_list.slice();
       const hundredSuffix = g.hundredSuffix || "";
@@ -48,9 +48,6 @@ const bannerPairs = linkPageTop.enable ? buildBannerPairs(groups) : [];
 const onerrFlink = `this.onerror=null;this.src='${flinkErr}'`;
 const onerrPost = `this.onerror=null;this.src='${postPageErr}'`;
 
-function siteshotFor(item: LinkItem): string {
-  return item.siteshot || `https://image.thum.io/get/width/400/crop/800/allowJPG/wait/20/noanimate/${item.link}`;
-}
 ---
 
 <Base title="友情链接" pageTitle="友情链接" topImg={false} aside={false}>
@@ -98,7 +95,7 @@ function siteshotFor(item: LinkItem): string {
             </a>
           </div>
           <div class="title-h2-a-right">
-            <a class="random-post-all no-text-decoration" href="/link/">{_p("flink.all_links")}</a>
+            <a class="random-post-all no-text-decoration" href={url_for("link/")}>{_p("flink.all_links")}</a>
           </div>
         </div>
       )}
