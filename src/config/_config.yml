@@ -320,7 +320,11 @@ valine:
   guest_info: nick,mail,link # valine comment header info (nick/mail/link)
   recordIP: false # Record reviewer IP
   serverURLs: # This configuration is suitable for domestic custom domain name users, overseas version will be automatically detected (no need to manually fill in)
-  bg: /img/comment_bg.png # valine background
+  # 评论区背景图。留空则 stylus 不输出该规则（见 stylus/_layout/third-party.styl:34）。
+  # 模板默认留空：原来指向 /img/comment_bg.png，但该图片并不在仓库里，会导致
+  # Astro 构建时刷 "didn't resolve" 警告。要背景图请自备图片并填绝对路径，
+  # 填完记得重跑 npm run compile:css。
+  bg: # valine background
   emojiCDN: //i0.hdslb.com/bfs/emote/ # emoji CDN
   enableQQ: true # enable the Nickname box to automatically get QQ Nickname and QQ Avatar
   requiredFields: nick,mail # required fields (nick/mail)
@@ -802,7 +806,12 @@ aside:
     enable: false
     content: 欢迎来看我的博客鸭~
   card_weixin:
+    # ⚠️ 注意：这里虽然写着 true，但**当前不会生效** —— 该卡片的标记在
+    # src/components/Aside.astro 里被整体注释掉了（样式仍在 theme.css 中，
+    # 翻转是纯 CSS，不依赖脚本）。要真正启用，请按 Aside.astro 里的三步说明操作
+    # （取消标记注释 + 补回 weixin 变量 + 这里保持 true）。
     enable: true
+    # 下面两张是主题作者的示例二维码，启用前请换成你自己的
     face: https://bu.dusays.com/2023/01/13/63c02edf44033.png
     backFace: https://bu.dusays.com/2023/05/13/645fa415e8694.png
   card_recent_post:
@@ -826,7 +835,7 @@ aside:
   card_archives:
     enable: true
     type: monthly # yearly or monthly
-    format: MMMM YYYY # eg: YYYY年MM月
+    format: YYYY年MM月 # 日期格式串，支持 YYYY/MM/M/DD/D/HH/mm/ss/MMMM。中文下写 MMMM YYYY 会得到「三月 2026」语序颠倒，故用 YYYY年MM月 → 2026年03月
     order: -1 # Sort of order. 1, asc for ascending; -1, desc for descending
     limit: 8 # if set 0 will show all
     sort_order: # Don't modify the setting unless you know how it works
@@ -897,7 +906,7 @@ centerConsole:
   card_archives:
     enable: true
     type: monthly # yearly or monthly
-    format: MMMM YYYY # eg: YYYY年MM月
+    format: YYYY年MM月 # 日期格式串，支持 YYYY/MM/M/DD/D/HH/mm/ss/MMMM。中文下写 MMMM YYYY 会得到「三月 2026」语序颠倒，故用 YYYY年MM月 → 2026年03月
     order: -1 # Sort of order. 1, asc for ascending; -1, desc for descending
     limit: 8 # if set 0 will show all
     sort_order: # Don't modify the setting unless you know how it works

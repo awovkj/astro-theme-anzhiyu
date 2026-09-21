@@ -12,7 +12,11 @@ astro-theme-anzhiyu/
 ├─ package.json
 ├─ tsconfig.json
 ├─ scripts/
-│  └─ compile-css.cjs          # 把原主题 Stylus 编译为 theme.css（带 hexo-config 求值）
+│  ├─ compile-css.cjs          # 把原主题 Stylus 编译为 theme.css（带 hexo-config 求值）
+│  ├─ check-css-drift.cjs      # 防漂移：theme.css 是否与 stylus/ 源一致
+│  ├─ check-font-coverage.cjs  # 字体覆盖：页面用到的字是否都被子集字体收录
+│  ├─ subset-font.cjs          # 字体子集化（源字体放 scripts/fonts/，不入库）
+│  └─ subset-extra.py          # 生成 unicode-range 分流的补字字体
 ├─ stylus/                     # 原主题 Stylus 源（已入库，编译的唯一数据源）
 ├─ src/
 │  ├─ config/
@@ -39,6 +43,9 @@ astro-theme-anzhiyu/
 │  │  ├─ archives/index.astro
 │  │  ├─ tags/index.astro + tags/[tag].astro
 │  │  ├─ categories/index.astro + categories/[category].astro
+│  │  ├─ rss.xml.ts            # RSS 订阅源（构建期路由）
+│  │  ├─ robots.txt.ts         # robots.txt（从 site 推导 Sitemap 地址）
+│  │  ├─ search.json.ts        # 本地搜索索引
 │  │  └─ 404.astro
 │  ├─ content/
 │  │  ├─ posts/*.md            # 文章
@@ -58,16 +65,32 @@ npm install
 npm run dev        # 本地预览 http://localhost:4321
 npm run build      # 产物输出到 dist/
 npm run check      # Astro / TypeScript 静态检查
-npm run validate   # 静态检查 + 生产构建
+npm run check:css  # 防漂移：theme.css 是否与 stylus/ 源一致
+npm run check:font # 字体覆盖：页面用到的字是否都被子集字体收录（需 fontTools）
+npm run validate   # check + check:css + 生产构建
 npm run preview    # 预览构建产物
 ```
+
+## 部署前必改
+
+**域名**是唯一硬性要求，两处要一致，否则 sitemap / RSS / robots.txt 以及文章内的绝对链接都会指向 `example.com`：
+
+1. `astro.config.mjs` 的 `site` → 你的域名（含协议，结尾不带 `/`）。
+2. `src/lib/site.ts` 的 `url` 回退值 → 同一个域名。
+
+此外 `src/lib/site.ts` 里的 `title` / `author` / `avatar` 也可以按需替换（模板默认保留主题作者 `awovkj` 的信息与示例头像）。改完跑一次 `npm run validate` 确认产物正确。
 
 ## 配置
 
 - **主题外观**：编辑 `src/config/_config.yml`（与原 Hexo 主题 `_config.yml` 完全一致，已整体复制）。
 - **站点信息**：编辑 `src/lib/site.ts`（标题、作者、语言、头像、favicon、目录名等）。
 - **图标字体**：已自托管在 `public/iconfont/`（安知鱼官方图标字体的本地副本，同源加载，无第三方 CDN）；也可在 `src/config/_config.yml` 的 `theme.asset.ali_iconfont_css` 指定自己的链接。
-- **写文章**：在 `src/content/posts/` 新建 `.md`（可从 `src/content/templates/post.md` 复制模板），front-matter 支持 `title / date / updated / tags / categories / cover / description / top / top_group_index / swiper_index / public` 等。
+- **写文章**：在 `src/content/posts/` 新建 `.md`（可从 `src/content/templates/post.md` 复制模板），front-matter 支持 `title / slug / date / updated / tags / categories / keywords / cover / description / comments / top / top_group_index / swiper_index / hide / public` 等。
+  - `slug`：**可选**，显式指定 URL 路径。不填时沿用 Astro 从文件名生成的 id —— 中文会被保留，但**括号等标点会被吃掉、拉丁字母会被小写化**（`学习日记-1(命令执行篇).md` → `/posts/学习日记-1命令执行篇/`）。需要干净 URL 就显式写。
+  - `top`：置顶优先级，**数字越大越靠前**。
+  - `swiper_index` / `top_group_index`：首页轮播图 / 右侧卡片组的顺序，**数字越小越靠前**。
+  - `public: false`：视为未发布，不进入列表/搜索/归档/RSS，也不生成文章页面。
+  - `hide: true`：仅在列表中隐藏，文章页仍然生成。
 
 ## 与原主题的对应关系
 
@@ -104,6 +127,8 @@ npm run compile:css
 会读取 `src/config/_config.yml` 作为 `hexo-config` 数据源（与运行时 `src/lib/theme.ts` 解析同一份文件），输出 `src/styles/theme.css`。
 
 注：`css_prefix` 已置为 `false`——nib 不再注入 `-o-`/`-ms-`/`-moz-` 化石前缀（现代浏览器均不需要），如需恢复改为 `true` 再编译。
+
+> **改了 stylus/ 或影响样式的配置，一定要重跑 `npm run compile:css`。** `theme.css` 是入库的编译产物，忘了重编译时页面会静默沿用旧样式 —— `npm run check:css` 就是拦这个的：它会重新编译一次并逐字节比对，不一致就报错（并就地写好新产物，直接 `git add` 即可）。`npm run validate` 已经包含这一步。
 
 ## 许可
 

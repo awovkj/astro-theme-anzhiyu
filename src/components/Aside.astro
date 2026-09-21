@@ -40,7 +40,8 @@ const avatar = (t.avatar && t.avatar.img) || site.avatar;
 const social = t.social || {};
 const authorDesc = (a.card_author && a.card_author.description) || site.description;
 const authorStatus = t.author_status || {};
-const weixin = a.card_weixin || {};
+// 注：微信公众号卡片用的 `weixin` 变量已删除 —— 该卡片的标记在下方被整体注释
+// （停用），留着就是死变量。重新启用时按下方注释补回即可。
 ---
 
 <div id="aside-content" class="aside-content">
@@ -80,7 +81,19 @@ const weixin = a.card_weixin || {};
     </div>
   )}
 
-  {/* 微信公众号卡片（已停用）
+  {/*
+    微信公众号卡片 —— 当前停用。
+
+    样式是完整的（theme.css 里的 #card-wechat / #flip-wrapper / #flip-content，
+    翻转效果为纯 CSS：`#flip-wrapper:hover #flip-content { rotateY(180deg) }`，
+    不依赖任何客户端脚本），所以这纯粹是「标记被注释掉」而非「功能缺失」。
+
+    要重新启用，三处一起改：
+      1. 取消下面 {weixin.enable && ( ... )} 的注释；
+      2. 在文件顶部补回 `const weixin = a.card_weixin || {};`
+         （当前已删除，因为标记注释掉后它是死变量，会触发 astro check 的未使用告警）；
+      3. 把 _config.yml 的 aside.card_weixin.enable 置回 true。
+
   {weixin.enable && (
     <div class="card-widget anzhiyu-right-widget" id="card-wechat">
       <div id="flip-wrapper"><div id="flip-content">

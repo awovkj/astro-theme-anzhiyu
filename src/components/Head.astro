@@ -70,6 +70,8 @@ const iconfontCss = url_for("/iconfont/ali_iconfont.css");
 
 <link rel="canonical" href={canonicalUrl} />
 <link rel="icon" href={url_for(site.favicon)} />
+{/* 订阅源自动发现（构建期路由 src/pages/rss.xml.ts） */}
+<link rel="alternate" type="application/rss+xml" title={site.title} href={url_for("/rss.xml")} />
 
 <link rel="preload" as="style" href={iconfontCss} />
 <link rel="stylesheet" href={iconfontCss} />

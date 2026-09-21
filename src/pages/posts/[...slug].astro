@@ -12,7 +12,14 @@ import Comments from "../../components/Comments.astro";
 export async function getStaticPaths() {
   // public: false 的文章视为未发布，不生成页面（访问时 404）
   const posts = await getCollection("posts", (entry: CollectionEntry<"posts">) => entry.data.public !== false);
-  return posts.map((entry: CollectionEntry<"posts">) => ({ params: { slug: entry.id }, props: { id: entry.id } }));
+  // 注意：Astro 的 glob loader **原生支持** frontmatter 的 `slug` —— 有 slug 时
+  // entry.id 就等于 slug 的值，没有才回落到文件名生成的 id（括号等标点会被吃掉、
+  // 拉丁字母会被小写化）。见 astro/dist/content/loaders/glob.js 的 generateIdDefault。
+  // 所以这里直接用 entry.id 即可，不需要另外去读 data.slug。
+  return posts.map((entry: CollectionEntry<"posts">) => ({
+    params: { slug: entry.id },
+    props: { id: entry.id },
+  }));
 }
 
 const { id } = Astro.props;

@@ -26,4 +26,4 @@ npm install
 npm run dev
 ```
 
-> 提示：图标字体通过 CDN 加载，请确保网络可访问 `cdn.cbd.int`。
+> 提示：图标字体已自托管在 `public/iconfont/`，同源加载，不依赖第三方 CDN。

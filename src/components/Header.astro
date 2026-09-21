@@ -54,13 +54,34 @@ const enableSearch = !!(t.algolia_search?.enable || t.local_search?.enable || t.
 const wordcountEnable = !!(t.wordcount && t.wordcount.enable && (t.wordcount.post_wordcount || t.wordcount.min2read));
 
 // ---- console panel data (mirrors the original theme's console in #nav-right) ----
-const consoleEnable = !!t.console?.enable;
+// ⚠️ 这里读的是 centerConsole（中控台），不是 console。
+//    console 是「控制台打印信息」开关（浏览器 devtools 里的 banner），语义完全不同。
+//    此前误用 t.console.enable 当开关，且归档卡片把 type/order/limit 写死、压根没传
+//    format，导致 _config.yml 里 centerConsole.card_archives 整段配置（含日期格式）
+//    全部不生效 —— 首页归档卡片会一直显示成「八月 2026」这种语序颠倒的日期。
+const centerConsole = (t.centerConsole as any) || {};
+const consoleEnable = !!centerConsole.enable;
 const rewardEnable = !!(t.reward && t.reward.enable && Array.isArray(t.reward.QR_code));
 const qrCodes = rewardEnable ? (t.reward.QR_code as { img: string; link?: string; text: string }[]) : [];
 const consoleData = await loadData();
 const consolePosts = sortedPosts(consoleData.posts);
-const consoleArchives = aside_archives(consolePosts, { type: "monthly", order: -1, limit: 6 });
-const consoleTags = (consoleData.tags || []).slice(0, 24);
+
+// 归档卡片：完全以 centerConsole.card_archives 为准
+const consoleArchiveCfg = (centerConsole.card_archives as any) || {};
+const consoleArchives =
+  consoleArchiveCfg.enable === false
+    ? ""
+    : aside_archives(consolePosts, {
+        type: consoleArchiveCfg.type ?? "monthly",
+        format: consoleArchiveCfg.format,
+        order: consoleArchiveCfg.order ?? -1,
+        limit: consoleArchiveCfg.limit ?? 8,
+      });
+
+// 标签卡片：limit 为 0 表示不限
+const consoleTagCfg = (centerConsole.card_tags as any) || {};
+const consoleTagLimit = consoleTagCfg.limit === 0 ? Infinity : consoleTagCfg.limit ?? 24;
+const consoleTags = (consoleData.tags || []).slice(0, consoleTagLimit);
 ---
 
 <header id="page-header" class={isHomeClass} style={homeImg ? `background: url(${homeImg}) top / cover no-repeat` : ""}>

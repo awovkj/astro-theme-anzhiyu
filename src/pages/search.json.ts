@@ -5,8 +5,9 @@ import { url_for } from "../lib/helpers";
 
 /**
  * Build-time JSON search index — the Astro equivalent of hexo-generator-search's
- * search.xml. Consumed by the client-side local search runtime
- * (src/scripts/local-search.ts).
+ * search.xml. Consumed by the client-side local search runtime, which is the
+ * inline `<script is:inline>` at the bottom of src/components/LocalSearch.astro
+ * (not a separate module).
  *
  * Output shape: { posts: [{ title, url, content, tags, cover }] }
  *   - url:   {post.path} (already "posts/{slug}/", root-prefixed via url_for)

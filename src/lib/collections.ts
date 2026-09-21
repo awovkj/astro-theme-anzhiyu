@@ -51,7 +51,10 @@ function entryToPost(e: CollectionEntry<"posts">): PostItem {
   const d = e.data;
   return {
     title: d.title,
-    // canonical url path of the post (matches src/pages/posts/[...slug].astro)
+    // canonical url path of the post（必须与 src/pages/posts/[...slug].astro 一致）。
+    // 用 e.id 即可：Astro 的 glob loader **原生支持** frontmatter 的 `slug`，有 slug
+    // 时 id 就是 slug 的值，没有才回落到文件名（此时括号等标点会被吃掉、拉丁字母
+    // 会被小写化）。所以不需要单独读 d.slug。
     path: `posts/${e.id}/`,
     date: d.date,
     updated: d.updated,

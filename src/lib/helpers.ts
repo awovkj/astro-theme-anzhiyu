@@ -227,10 +227,13 @@ export function sort_attr_post(type: "swiper_list" | "top_group_list", posts: Po
     if ((item as any).swiper_index != null) swiper_list.push(item);
     if ((item as any).top_group_index != null) top_group_list.push(item);
   }
+  // 升序：数字越小越靠前。与官方文档及 templates/post.md 的注释一致。
+  // 这里曾经是 sort(...).reverse()，即「越大越靠前」—— 与文档相反。因为示例文章
+  // 都填同一个值所以看不出来，但一调顺序就会踩坑。
   const bySwiper = (a: any, b: any) => a.swiper_index - b.swiper_index;
   const byGroup = (a: any, b: any) => a.top_group_index - b.top_group_index;
-  swiper_list.sort(bySwiper).reverse();
-  top_group_list.sort(byGroup).reverse();
+  swiper_list.sort(bySwiper);
+  top_group_list.sort(byGroup);
   const pad = (arr: PostItem[]) => {
     if (arr.length < targetLength) {
       const extra = posts.filter((p) => !arr.includes(p)).slice(0, targetLength - arr.length);
