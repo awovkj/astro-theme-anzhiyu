@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "installCommand": "curl -fsSL https://registry.npmmirror.com/-/binary/node/v22.12.0/node-v22.12.0-linux-x64.tar.gz -o /tmp/node-runtime.tar.gz && mkdir -p .node-runtime && tar -xzf /tmp/node-runtime.tar.gz -C .node-runtime --strip-components=1 && ./.node-runtime/bin/node -v && npm install",
+  "buildCommand": "./.node-runtime/bin/node ./node_modules/astro/bin/astro.mjs build",
   "outputDirectory": "./dist",
   "headers": [
     {

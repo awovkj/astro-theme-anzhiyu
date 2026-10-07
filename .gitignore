@@ -43,6 +43,9 @@ scripts/fonts/
 .netlify/
 .edgeone/
 
+# EdgeOne 构建时自带的 Node 运行时（installCommand 下载解压）
+.node-runtime/
+
 # 系统隐藏文件
 .DS_Store
 Thumbs.db
