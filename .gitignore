@@ -28,9 +28,15 @@ scripts/fonts/
 
 # 工具运行时产物（项目记忆、本地状态，不应入库）
 .workbuddy/
+.workbuddy-ai/
 .data/
 .chrome-debug/
 .playwright-mcp/
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars
+.dev.vars.*
 
 # 系统隐藏文件
 .DS_Store
