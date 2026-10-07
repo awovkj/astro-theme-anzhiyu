@@ -16,10 +16,10 @@ const link = article.path;
 const title = article.title || _p("no_title");
 const position = (t.cover && t.cover.position) || "right";
 const leftOrRight = position === "both" ? (index % 2 === 0 ? "left" : "right") : position === "left" ? "left" : "right";
-const post_cover = article.cover;
+const post_cover = typeof article.cover === "string" ? article.cover : "";
 const no_cover = article.cover === false || !t.cover?.index_enable ? "no-cover" : "";
 const new_post = isHome && index === 0;
-const dateFmt = (site as any).date_format || "YYYY-MM-DD";
+const dateFmt = site.date_format;
 const pm = t.post_meta?.page || {};
 const method = t.index_post_content?.method;
 let content = "";
@@ -35,7 +35,7 @@ const sticky = (article as any).sticky > 0 || (article as any).top;
   {post_cover && t.cover?.index_enable && (
     <div class={`post_cover ${leftOrRight}`}>
       <a href={url_for(link)} title={title} style="display:flex;height:100%;">
-        <img class="post_bg" src={url_for(String(post_cover))} alt={title} style="pointer-events:none" />
+        <img class="post_bg" src={url_for(String(post_cover))} alt={title} loading={index === 0 ? "eager" : "lazy"} decoding="async" style="pointer-events:none" />
       </a>
     </div>
   )}

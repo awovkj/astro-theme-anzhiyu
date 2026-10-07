@@ -1,0 +1,19 @@
+---
+import type { PostItem } from "../lib/collections";
+import { url_for, date, date_xml, fullDate } from "../lib/helpers";
+import { site } from "../lib/site";
+interface Props { post: PostItem; year?: number }
+const { post, year } = Astro.props;
+const cover = typeof post.cover === "string" ? post.cover : "";
+---
+<div class:list={["article-sort-item", year !== undefined && `year-${year}`]}>
+  <a class="article-sort-item-img" href={url_for(post.path)} aria-label={post.title}>
+    {cover && <img src={url_for(cover)} alt={post.title} loading="lazy" decoding="async" />}
+  </a>
+  <div class="article-sort-item-info">
+    <div class="article-sort-item-time">
+      <time datetime={date_xml(post.date)} title={fullDate(post.date)}>{date(post.date, site.date_format)}</time>
+    </div>
+    <a class="article-sort-item-title" href={url_for(post.path)} title={post.title}>{post.title}</a>
+  </div>
+</div>

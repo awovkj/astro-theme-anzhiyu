@@ -1,7 +1,6 @@
 ---
 import { theme } from "../lib/theme";
 import { site } from "../lib/site";
-import { _p } from "../lib/i18n";
 import { globalConfig, globalConfigSite } from "../lib/globalConfig";
 import { url_for } from "../lib/helpers";
 
@@ -12,6 +11,7 @@ interface Props {
   description?: string;
   isPost?: boolean;
   isHome?: boolean;
+  noindex?: boolean;
   showToc?: boolean;
   postUpdate?: string;
 }
@@ -22,6 +22,7 @@ const {
   description = site.description,
   isPost = false,
   isHome = false,
+  noindex = false,
   showToc = false,
   postUpdate = "",
 } = Astro.props;
@@ -31,9 +32,9 @@ const themeColorLight = (t.theme_color && t.theme_color.enable && t.theme_color.
 const themeColorDark = (t.theme_color && t.theme_color.enable && t.theme_color.meta_theme_color_dark) || "#0d0d0d";
 const themeColor = t.display_mode === "dark" ? themeColorDark : themeColorLight;
 
-const pageKeywords = keywords || (Array.isArray((site as any).keywords) ? (site as any).keywords.join(",") : "");
+const pageKeywords = keywords || (Array.isArray(site.keywords) ? site.keywords.join(",") : "");
 const pageAuthor = site.email ? `${site.author},${site.email}` : site.author;
-const pageCopyright = (site as any).copyright || site.author;
+const pageCopyright = site.copyright || site.author;
 
 const GLOBAL_CONFIG = globalConfig();
 const GLOBAL_CONFIG_SITE = globalConfigSite({ title: site.title, pageTitle, isPost, isHome, showToc, postUpdate });
@@ -49,11 +50,13 @@ const iconfontCss = url_for("/iconfont/ali_iconfont.css");
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>{pageTitle}</title>
-{keywords && <meta name="keywords" content={pageKeywords} />}
+{pageKeywords && <meta name="keywords" content={pageKeywords} />}
+{description && <meta name="description" content={description} />}
+{noindex && <meta name="robots" content="noindex, follow" />}
 <meta name="author" content={pageAuthor} />
 <meta name="copyright" content={pageCopyright} />
 <meta name="format-detection" content="telephone=no" />
-<meta name="theme-color" content={themeColor} />
+<meta name="theme-color" content={themeColor} data-light={themeColorLight} data-dark={themeColorDark} />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-touch-fullscreen" content="yes" />
 <meta name="apple-mobile-web-app-title" content={pageTitle} />
@@ -84,4 +87,17 @@ const iconfontCss = url_for("/iconfont/ali_iconfont.css");
 </script>
 <script is:inline define:vars={{ GLOBAL_CONFIG_SITE }}>
   window.GLOBAL_CONFIG_SITE = GLOBAL_CONFIG_SITE;
+</script>
+
+<script is:inline define:vars={{ autoDark: GLOBAL_CONFIG.autoDarkmode }}>
+  (() => {
+    let saved;
+    try { saved = localStorage.getItem("theme"); } catch {}
+    const mode = saved === "dark" || saved === "light" ? saved
+      : autoDark ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : document.documentElement.dataset.theme;
+    document.documentElement.dataset.theme = mode;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && meta.dataset[mode]) meta.content = meta.dataset[mode];
+  })();
 </script>

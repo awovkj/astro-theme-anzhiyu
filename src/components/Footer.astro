@@ -33,7 +33,7 @@ const hasWrapContent = !!(
           {item.icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${item.icon}`}></i>}
         </a>
       ))}
-      <img class="footer_mini_logo" title={_p("footer.back_to_top")} alt={_p("footer.back_to_top")} onclick="anzhiyu.scrollToDest(0, 500)" src={centerImg} width="50" height="50" />
+      <img class="footer_mini_logo" title={_p("footer.back_to_top")} alt={_p("footer.back_to_top")} onclick="anzhiyu.scrollToDest(0, 500)" src={url_for(centerImg)} width="50" height="50" />
       {(socialBar.right || []).map((item: any) => (
         <a class="deal_link" href={url_for(item.link)} title={item.title}>
           {item.icon?.startsWith("anzhiyu") && <i class={`anzhiyufont ${item.icon}`}></i>}
@@ -68,8 +68,8 @@ const hasWrapContent = !!(
   {bdageitem?.enable && (
     <p id="ghbdages">
       {(bdageitem.list || []).map((item: any) => (
-        <a class="github-badge" target="_blank" href={item.link} style="margin-inline:5px" data-title={item.message} title={item.message}>
-          <img src={item.shields} alt={item.message} />
+        <a class="github-badge" target="_blank" href={url_for(item.link)} style="margin-inline:5px" data-title={item.message} title={item.message}>
+          <img src={url_for(item.shields)} alt={item.message} />
         </a>
       ))}
     </p>

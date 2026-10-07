@@ -98,7 +98,7 @@ const consoleTags = (consoleData.tags || []).slice(0, consoleTagLimit);
                   <div class="back-menu-list">
                     {group.item?.map((item: any) => (
                       <a class="back-menu-item" href={url_for(item.link)} title={item.name}>
-                        <img class="back-menu-item-icon" src={item.icon} alt={item.name} />
+                        <img class="back-menu-item-icon" src={url_for(item.icon)} alt={item.name} />
                         <span class="back-menu-item-text">{item.name}</span>
                       </a>
                     ))}
@@ -185,7 +185,7 @@ const consoleTags = (consoleData.tags || []).slice(0, consoleTagLimit);
                     {qrCodes.map((q) => (
                       <li class="reward-item">
                         <a href={q.link || q.img} target="_blank">
-                          <img class="post-qr-code-img" alt={q.text} src={q.img} loading="lazy" />
+                          <img class="post-qr-code-img" alt={q.text} src={url_for(q.img)} loading="lazy" />
                         </a>
                         <div class="post-qr-code-desc">{q.text}</div>
                       </li>
@@ -296,13 +296,13 @@ const consoleTags = (consoleData.tags || []).slice(0, consoleTagLimit);
                   <i class="anzhiyufont anzhiyu-icon-calendar-days post-meta-icon"></i>
                   <span class="post-meta-label">{_p("post.created")}</span>
                   <time class="post-meta-date-created" itemprop="dateCreated datePublished" datetime={date_xml(post.date)} title={_p("post.created") + " " + fullDate(post.date)}>
-                    {date(post.date, (site as any).date_format || "YYYY-MM-DD")}
+                    {date(post.date, site.date_format)}
                   </time>
                   <span class="post-meta-separator"></span>
                   <i class="anzhiyufont anzhiyu-icon-history post-meta-icon"></i>
                   <span class="post-meta-label">{_p("post.updated")}</span>
                   <time class="post-meta-date-updated" datetime={date_xml(post.updated || post.date)} title={_p("post.updated") + " " + fullDate(post.updated || post.date)}>
-                    {date(post.updated || post.date, (site as any).date_format || "YYYY-MM-DD")}
+                    {date(post.updated || post.date, site.date_format)}
                   </time>
                 </span>
               </div>

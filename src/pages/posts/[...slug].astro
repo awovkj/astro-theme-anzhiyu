@@ -58,7 +58,7 @@ if (paginationMode && currentIndex >= 0) {
 
 const rewardEnable = t.reward?.enable && Array.isArray(t.reward?.QR_code) && t.reward.QR_code.length > 0;
 const rewardItems: any[] = rewardEnable ? t.reward.QR_code : [];
-const errorImg = t.error_img?.post_page || "/img/404.jpg";
+const errorImg = t.error_img?.post_page || "/img/placeholder.svg";
 
 function postCover(p: (typeof allPosts)[0] | null): string {
   if (!p) return "";

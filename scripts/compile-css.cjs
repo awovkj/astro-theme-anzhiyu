@@ -95,18 +95,27 @@ stylus(str)
       if (fs.existsSync(f)) return fs.readFileSync(f, "utf8") + "\n";
       return m;
     });
-    fs.mkdirSync(path.dirname(OUT), { recursive: true });
 
     // 单级压缩：csso restructure——结构级重组，合并分散的重复选择器（如 .content×14）。
-    // 失败回退未压缩版本，保证编译链不中断。
+    // 校验模式只读；编译失败必须阻止发布。
     try {
       const out = csso.minify(css, { restructure: true }).css;
+      if (process.argv.includes("--check")) {
+        if (!fs.existsSync(OUT) || fs.readFileSync(OUT, "utf8") !== out) {
+          console.error("[css-drift] theme.css is out of date. Run npm run compile:css and commit the result.");
+          process.exitCode = 1;
+        } else {
+          console.log("[css-drift] OK — theme.css matches the Stylus source.");
+        }
+        return;
+      }
+      fs.mkdirSync(path.dirname(OUT), { recursive: true });
       fs.writeFileSync(OUT, out);
       console.log(
         `Compiled theme.css -> ${OUT} (${(css.length / 1024).toFixed(1)} KB -> ${(out.length / 1024).toFixed(1)} KB, -${(100 - (out.length / css.length) * 100).toFixed(1)}%)`
       );
     } catch (e) {
-      fs.writeFileSync(OUT, css);
-      console.warn("minify failed, wrote unminified css:", e.message);
+      console.error("CSS compilation failed:", e.message);
+      process.exitCode = 1;
     }
   });

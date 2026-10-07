@@ -15,7 +15,7 @@ export function GET({ site }: APIContext) {
     "User-agent: *",
     "Allow: /",
     "",
-    `Sitemap: ${base}/sitemap-index.xml`,
+    `Sitemap: ${base}${import.meta.env.BASE_URL.replace(/\/$/, "")}/sitemap-index.xml`,
     "",
   ].join("\n");
 

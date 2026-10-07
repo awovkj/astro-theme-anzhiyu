@@ -25,8 +25,7 @@ export const GET: APIRoute = async () => {
   }
   const data = await loadData();
   const posts = data.posts.map((p) => {
-    const entry: any = (p as any)._entry;
-    const rawBody: string = (entry && typeof entry.body === "string" ? entry.body : "") || "";
+    const rawBody = p.content || "";
     const coverSrc = firstImage(p, rawBody);
     return {
       title: p.title,

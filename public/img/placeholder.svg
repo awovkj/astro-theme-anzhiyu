@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-label="Image placeholder">
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#425aef"/><stop offset="1" stop-color="#9aa9ff"/></linearGradient></defs>
+  <path fill="url(#bg)" d="M0 0h960v540H0z"/>
+  <circle cx="740" cy="140" r="65" fill="#fff" opacity=".22"/>
+  <path d="M0 400 260 170 570 460 740 300 960 480v60H0z" fill="#fff" opacity=".18"/>
+</svg>

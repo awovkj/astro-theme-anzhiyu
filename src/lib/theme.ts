@@ -8,8 +8,3 @@ import themeYaml from "../config/_config.yml?raw";
  * the theme behaviour, exactly like the original.
  */
 export const theme: Record<string, any> = (yaml.load(themeYaml) as Record<string, any>) || {};
-
-/** Serialise the theme config to JSON for the client-side runtime (window.__ANZHIYU_CONFIG__). */
-export function themeConfigJSON(): string {
-  return JSON.stringify(theme);
-}

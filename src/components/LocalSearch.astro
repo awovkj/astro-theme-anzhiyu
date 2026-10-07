@@ -11,11 +11,11 @@ const loadDataText = _p("search.load_data");
 ---
 {enabled && (
   <div id="local-search">
-    <div class="search-dialog">
+    <div class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="search-dialog-title" tabindex="-1">
       <nav class="search-nav">
-        <span class="search-dialog-title">{searchTitle}</span>
+        <span class="search-dialog-title" id="search-dialog-title">{searchTitle}</span>
         <span id="loading-status"></span>
-        <button class="search-close-button">
+        <button class="search-close-button" type="button" aria-label="关闭搜索">
           <i class="anzhiyufont anzhiyu-icon-xmark"></i>
         </button>
       </nav>
@@ -28,136 +28,21 @@ const loadDataText = _p("search.load_data");
       <div class="search-wrap">
         <div id="local-search-input">
           <div class="local-search-box">
-            <input class="local-search-box--input" type="text" placeholder={inputPlaceholder} />
+            <input class="local-search-box--input" type="search" aria-label={inputPlaceholder} placeholder={inputPlaceholder} />
           </div>
         </div>
         <hr />
-        <div id="local-search-results" data-empty={hitsEmpty}></div>
+        <div id="local-search-results" aria-live="polite" data-empty={hitsEmpty}></div>
       </div>
     </div>
 
     <div id="search-mask"></div>
 
-    <style is:global>{`
-      .search-dialog {
-        position: fixed;
-        top: 5rem;
-        left: 50%;
-        z-index: 1001;
-        display: none;
-        margin-left: -18.75rem;
-        padding: 1.25rem;
-        width: 37.5rem;
-        border-radius: 12px;
-        background: var(--anzhiyu-card-bg);
-        box-shadow: var(--anzhiyu-shadow-lightblack);
-        border: var(--style-border);
-        transition: 0.3s;
-      }
-      .search-dialog hr {
-        margin: 20px auto;
-      }
-      .search-dialog .search-nav {
-        margin: 0 0 14px;
-        color: var(--anzhiyu-main, #425AEF);
-        font-size: 1.4em;
-        line-height: 1;
-      }
-      .search-dialog .search-nav .search-dialog-title {
-        margin-right: 10px;
-      }
-      .search-dialog .search-nav .search-close-button {
-        float: right;
-        color: #858585;
-        transition: color 0.2s ease-in-out;
-        cursor: pointer;
-        border: none;
-        background: none;
-        padding: 0;
-      }
-      .search-dialog .search-nav .search-close-button:hover {
-        color: var(--anzhiyu-main, #425AEF);
-      }
-      #search-mask {
-        position: fixed;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 1000;
-        display: none;
-        background: rgba(0, 0, 0, 0.6);
-      }
-      #local-search .search-dialog .local-search-box {
-        margin: 0 auto;
-        max-width: 100%;
-        width: 100%;
-      }
-      #local-search .search-dialog .local-search-box input {
-        padding: 5px 14px;
-        width: 100%;
-        box-sizing: border-box;
-        outline: none;
-        border: 2px solid var(--anzhiyu-main, #425AEF);
-        border-radius: 40px;
-        background: var(--search-bg, #f6f8fa);
-        color: var(--search-input-color, #4C4948);
-        -webkit-appearance: none;
-      }
-      #local-search .search-dialog .search-wrap {
-        display: none;
-      }
-      #local-search .search-dialog .local-search__hit-item .search-keyword {
-        color: #F47466;
-        font-weight: bold;
-      }
-      #local-search .search-dialog .search-result-list {
-        overflow-y: auto;
-        max-height: calc(80vh - 130px);
-      }
-      #local-search .search-dialog .local-search__hit-item a {
-        display: block;
-        color: var(--search-result-title, #4C4948);
-        font-weight: 600;
-        cursor: pointer;
-      }
-      #local-search .search-dialog .local-search__hit-item a:hover {
-        color: var(--anzhiyu-main, #425AEF);
-      }
-      #local-search .search-dialog .local-search__hit-item .search-result {
-        margin: 0 8px 8px 0;
-        word-break: break-all;
-      }
-      @media screen and (max-width: 768px) {
-        .search-dialog {
-          top: 0;
-          left: 0;
-          margin: 0;
-          width: 100%;
-          height: 100%;
-          border-radius: 0 !important;
-        }
-        #local-search .search-dialog .search-result-list {
-          padding-bottom: 40px;
-          max-height: 75vh !important;
-        }
-      }
-      @media screen and (max-height: 680px) {
-        .search-dialog {
-          top: 2rem;
-        }
-      }
-      @media screen and (max-height: 580px) {
-        .search-dialog {
-          top: 0;
-          left: 0;
-          margin: 0;
-          width: 100%;
-          height: 100%;
-          border-radius: 0 !important;
-        }
-      }
-    `}</style>
+    <style is:global>
+      .search-dialog hr { margin: 20px auto; }
+      .search-dialog .search-close-button { cursor: pointer; border: none; background: none; padding: 0; }
+      #local-search-input input { box-sizing: border-box; }
+    </style>
 
     <!-- is:inline：随组件条件渲染输出，关闭 local_search 时不产生任何 JS 产物 -->
     <script is:inline>
@@ -188,85 +73,103 @@ const loadDataText = _p("search.load_data");
           var listenerAttached = false;
           var isOpen = false;
           var dataPromise = null;
+          var previousFocus;
+          var bodyWidth;
+          var bodyOverflow;
+          var searchVersion = 0;
 
           function animateIn(el, animation) {
             el.style.display = "block";
             el.style.animation = animation;
           }
 
-          function animateOut(el, animation) {
-            el.style.animation = animation;
-            var done = function () {
-              el.style.display = "none";
-              el.removeEventListener("animationend", done);
-            };
-            el.addEventListener("animationend", done);
+          function hide(el) {
+            el.style.animation = "";
+            el.style.display = "none";
           }
 
           function openSearch(event) {
             if (event) event.preventDefault();
             if (isOpen) return;
             isOpen = true;
+            previousFocus = document.activeElement;
+            bodyWidth = document.body.style.width;
+            bodyOverflow = document.body.style.overflow;
             document.body.style.width = "100%";
             document.body.style.overflow = "hidden";
             animateIn(mask, "to_show 0.5s");
             animateIn(dialog, "titleScale 0.5s");
-            setTimeout(function () { input.focus(); }, 100);
+            input.focus();
             if (!listenerAttached) {
               attachInputListener();
               listenerAttached = true;
             }
-            document.addEventListener("keydown", onEscape);
+            document.addEventListener("keydown", onDialogKey);
+            ensureData().then(function () { if (isOpen) runSearch(input.value); }).catch(function () {});
           }
 
           function closeSearch() {
             if (!isOpen) return;
             isOpen = false;
-            document.removeEventListener("keydown", onEscape);
-            document.body.style.width = "";
-            document.body.style.overflow = "";
-            animateOut(dialog, "search_close .5s");
-            animateOut(mask, "to_hide .5s");
+            document.removeEventListener("keydown", onDialogKey);
+            document.body.style.width = bodyWidth;
+            document.body.style.overflow = bodyOverflow;
+            hide(dialog);
+            hide(mask);
+            if (previousFocus && previousFocus.isConnected) previousFocus.focus();
           }
 
-          function onEscape(event) {
-            if (event.code === "Escape") closeSearch();
+          function onDialogKey(event) {
+            if (event.key === "Escape") { event.preventDefault(); closeSearch(); return; }
+            if (event.key !== "Tab") return;
+            var focusable = Array.from(dialog.querySelectorAll('a[href], button, input, [tabindex="0"]'))
+              .filter(function (el) { return !el.disabled && el.getClientRects().length; });
+            var first = focusable[0];
+            var last = focusable[focusable.length - 1];
+            if (!first) { event.preventDefault(); dialog.focus(); return; }
+            if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+              event.preventDefault(); last.focus();
+            } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+              event.preventDefault(); first.focus();
+            }
           }
 
-          function fetchData() {
-            return fetch(config.path, { headers: { Accept: "application/json" } })
-              .then(function (response) {
-                if (!response.ok) throw new Error("Search index request failed with " + response.status);
-                return response.json();
-              })
-              .then(function (json) {
-                if (!json || !Array.isArray(json.posts)) throw new Error("Search index has an invalid shape");
-                return json.posts.map(function (post) {
-                  return {
-                    title: typeof post.title === "string" ? post.title : "",
-                    url: typeof post.url === "string" ? post.url : "",
-                    content: typeof post.content === "string" ? post.content : "",
-                    tags: Array.isArray(post.tags) ? post.tags.filter(function (tag) { return typeof tag === "string"; }) : [],
-                    cover: typeof post.cover === "string" ? post.cover : "",
-                  };
-                });
-              })
-              .catch(function (error) {
-                console.error("Unable to load the local search index", error);
-                return [];
-              })
-              .then(function (posts) {
-                if (loadingDb && loadingDb.isConnected) {
-                  var wrap = loadingDb.nextElementSibling;
-                  if (wrap) wrap.style.display = "block";
-                  loadingDb.remove();
-                }
-                return posts;
+          async function fetchData() {
+            try {
+              const response = await fetch(config.path, { headers: { Accept: "application/json" } });
+              if (!response.ok) throw new Error("Search index request failed with " + response.status);
+              const json = await response.json();
+              if (!json || !Array.isArray(json.posts)) throw new Error("Search index has an invalid shape");
+              return json.posts.map(function (post) {
+                post = post || {};
+                return {
+                  title: typeof post.title === "string" ? post.title : "",
+                  url: typeof post.url === "string" ? post.url : "",
+                  content: typeof post.content === "string" ? post.content : "",
+                  tags: Array.isArray(post.tags) ? post.tags.filter(function (tag) { return typeof tag === "string"; }) : [],
+                  cover: typeof post.cover === "string" ? post.cover : "",
+                };
               });
+            } finally {
+              if (loadingDb) loadingDb.style.display = "none";
+              search.querySelector(".search-wrap").style.display = "block";
+            }
+          }
+
+          function ensureData() {
+            if (!dataPromise) {
+              dataPromise = fetchData().catch(function (error) {
+                dataPromise = null;
+                results.textContent = "搜索索引加载失败，请重新输入或关闭后重试。";
+                setLoading(false);
+                console.error("Unable to load the local search index", error);
+                throw error;
+              });
+            }
+            return dataPromise;
           }
 
           function attachInputListener() {
-            if (!config.preload && !dataPromise) dataPromise = fetchData();
             var timer;
             input.addEventListener("input", function () {
               if (timer) clearTimeout(timer);
@@ -277,7 +180,8 @@ const loadDataText = _p("search.load_data");
 
           function runSearch(value) {
             var keywords = [];
-            var seen = {};
+            var version = ++searchVersion;
+            var seen = Object.create(null);
             value.trim().toLocaleLowerCase().split(/\s+/).forEach(function (k) {
               if (k && !seen[k]) { seen[k] = 1; keywords.push(k); }
             });
@@ -292,8 +196,9 @@ const loadDataText = _p("search.load_data");
             }
 
             var count = 0;
-            var data = dataPromise || Promise.resolve([]);
+            var data = ensureData();
             data.then(function (posts) {
+              if (version !== searchVersion) return;
               posts.forEach(function (post) {
                 var title = post.title.trim();
                 var content = post.content.trim();
@@ -381,7 +286,7 @@ const loadDataText = _p("search.load_data");
                 list.appendChild(empty);
               }
               setLoading(false);
-            });
+            }).catch(function () {});
           }
 
           function setLoading(active) {
@@ -403,10 +308,9 @@ const loadDataText = _p("search.load_data");
               return;
             }
             var alternatives = keywords.slice().sort(function (a, b) { return b.length - a.length; }).map(escapeRegex);
-            var pattern = new RegExp(alternatives.join("|"), "gi");
+            var re = new RegExp(alternatives.join("|"), "gi");
             var cursor = 0;
             var m;
-            var re = new RegExp(pattern.source, pattern.flags);
             while ((m = re.exec(text)) !== null) {
               var index = m.index;
               if (index > cursor) parent.append(text.slice(cursor, index));
@@ -421,6 +325,8 @@ const loadDataText = _p("search.load_data");
           }
 
           function toSitePath(path, root) {
+            path = path.trim().replace(/[\u0000-\u001f\u007f]/g, "");
+            if (path.includes("\\")) return "#";
             var rootPart = root.replace(/^\/+|\/+$/g, "");
             var normalizedRoot = rootPart ? "/" + rootPart + "/" : "/";
             if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(path)) return normalizedRoot;
@@ -436,7 +342,7 @@ const loadDataText = _p("search.load_data");
           var closeButton = search.querySelector(".search-close-button");
           if (closeButton) closeButton.addEventListener("click", closeSearch);
           mask.addEventListener("click", closeSearch);
-          if (config.preload) dataPromise = fetchData();
+          if (config.preload) ensureData().catch(function () {});
         }
 
         if (document.readyState === "loading") {

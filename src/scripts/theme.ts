@@ -6,28 +6,15 @@
 
 // Keep this side-effect script a module so TypeScript does not merge its
 // globals with the post-page runtime during project-wide type checking.
-export {};
+import { parseLaunchTime } from "../lib/runtime-date";
+import { legacyCopy, loadScript } from "./runtime";
 
 const G = (window as any).GLOBAL_CONFIG || {};
-const anzhiyu: any = {};
+const anzhiyu: any = (window as any).anzhiyu ||= {};
 
-function legacyCopy(): boolean {
-  const command = Reflect.get(document, "execCommand");
-  return typeof command === "function" && command.call(document, "copy");
-}
 
 function scrollToDest(target: number, time = 500) {
-  const current = window.scrollY || document.documentElement.scrollTop;
-  const diff = target - current;
-  if (!diff) return;
-  const step = Math.max(1, Math.abs(diff) / (time / 16));
-  let acc = 0;
-  const tick = () => {
-    acc += step;
-    window.scrollTo(0, current + (diff > 0 ? Math.min(acc, diff) : -Math.min(acc, -diff)));
-    if (Math.abs(acc) < Math.abs(diff)) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
+  window.scrollTo({ top: target, behavior: time > 0 && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth" : "instant" });
 }
 anzhiyu.scrollToDest = scrollToDest;
 
@@ -79,15 +66,7 @@ function initFooterRuntime() {
   const cfg = G.footerRuntime;
   const el = document.getElementById("runtimeTextTip");
   if (!cfg || !cfg.launchTime || !el) return;
-  // 支持 "YYYY/MM/DD HH:mm:ss" / "MM/DD/YYYY HH:mm:ss" / ISO 等格式
-  const raw = String(cfg.launchTime).replace(/-/g, "/");
-  const parts = raw.split(/[ /]/).map(Number);
-  const launch =
-    parts.length >= 3 && parts.slice(0, 3).every((n) => Number.isFinite(n))
-      ? parts[0] > 31 // YYYY/MM/DD
-        ? new Date(parts[0], parts[1] - 1, parts[2], parts[3] || 0, parts[4] || 0, parts[5] || 0)
-        : new Date(parts[2], parts[0] - 1, parts[1], parts[3] || 0, parts[4] || 0, parts[5] || 0) // MM/DD/YYYY
-      : new Date(raw);
+  const launch = parseLaunchTime(cfg.launchTime);
   if (Number.isNaN(+launch)) return;
   const render = () => {
     const diff = Math.max(0, Date.now() - +launch);
@@ -103,19 +82,26 @@ function initFooterRuntime() {
 
 // ---- dark mode ----
 function applyDark(dark: boolean) {
-  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-  try { localStorage.setItem("theme", dark ? "dark" : "light"); } catch {}
+  const mode = dark ? "dark" : "light";
+  document.documentElement.dataset.theme = mode;
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (meta?.dataset[mode]) meta.content = meta.dataset[mode]!;
 }
 function initDark() {
-  const saved = (() => { try { return localStorage.getItem("theme"); } catch { return null; } })();
-  if (saved) applyDark(saved === "dark");
-  else if (G.autoDarkmode) applyDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
-
-  document.querySelectorAll<HTMLElement>(".darkmode_switchbutton, #darkmode").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const cur = document.documentElement.getAttribute("data-theme") === "dark";
-      applyDark(!cur);
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const saved = () => { try { return localStorage.getItem("theme"); } catch { return null; } };
+  let preference = saved();
+  const systemTheme = () => {
+    if (G.autoDarkmode && preference !== "dark" && preference !== "light") applyDark(media.matches);
+  };
+  systemTheme();
+  media.addEventListener("change", systemTheme);
+  document.querySelectorAll<HTMLElement>(".darkmode_switchbutton").forEach((btn) => {
+    btn.addEventListener("click", (event) => {
+      event.preventDefault();
+      preference = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      applyDark(preference === "dark");
+      try { localStorage.setItem("theme", preference); } catch {}
     });
   });
 }
@@ -130,8 +116,6 @@ function updateScroll() {
   const pct = docH > 0 ? Math.min(100, Math.round((st / docH) * 100)) : 0;
   const percent = document.getElementById("percent");
   if (percent) percent.textContent = String(pct === 0 ? 1 : pct);
-  const goUp = document.getElementById("go-up");
-  if (goUp) goUp.classList.toggle("show", st > 200);
 
   // nav-fixed / nav-visible — same thresholds as the original theme
   const header = document.getElementById("page-header");
@@ -159,18 +143,11 @@ function initToggles() {
   const toggleMenu = document.getElementById("toggle-menu");
   const sidebar = document.getElementById("sidebar");
   const mask = document.getElementById("menu-mask");
-  const openSidebar = () => { sidebar?.classList.add("open"); mask?.classList.add("show"); };
-  const closeSidebar = () => { sidebar?.classList.remove("open"); mask?.classList.remove("show"); };
+  const openSidebar = () => { sidebar?.classList.add("open"); mask?.classList.add("show"); toggleMenu?.setAttribute("aria-expanded", "true"); };
+  const closeSidebar = () => { sidebar?.classList.remove("open"); mask?.classList.remove("show"); toggleMenu?.setAttribute("aria-expanded", "false"); };
   toggleMenu?.addEventListener("click", openSidebar);
   mask?.addEventListener("click", closeSidebar);
 
-  document.getElementById("hide-aside-btn")?.addEventListener("click", () => {
-    document.getElementById("content-inner")?.classList.toggle("hide-aside");
-  });
-
-  const rightsideConfig = document.getElementById("rightside-config");
-  const hideBox = document.getElementById("rightside-config-hide");
-  rightsideConfig?.addEventListener("click", () => hideBox?.classList.toggle("show"));
 }
 
 function initDiytitle() {
@@ -193,15 +170,6 @@ function initDiytitle() {
 }
 
 // ---- subtitle typewriter (打字机效果, mirrors the original subtitleType) ----
-function loadScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("load fail: " + src));
-    document.head.appendChild(s);
-  });
-}
 
 // 本地 vendor 路径（public/js/vendor，同源加载，替代第三方 CDN）
 const vendor = (file: string) => `${import.meta.env.BASE_URL}js/vendor/${file}`;
@@ -213,7 +181,7 @@ function initSubtitleType() {
   const subtitleEl = el;
   const sub: string[] = Array.isArray(cfg.sub) ? cfg.sub : [];
   const strings = sub.length ? sub : [""];
-  if (!cfg.effect) {
+  if (!cfg.effect || matchMedia("(prefers-reduced-motion: reduce)").matches) {
     subtitleEl.textContent = strings[0];
     return;
   }
@@ -282,14 +250,14 @@ function initProgressiveHeader() {
 
   // re-apply when the dark/light theme switches (mirrors the MutationObserver)
   const observer = new MutationObserver((mutations) => {
-    if (mutations.some((m) => m.attributeName === "data-theme") && location.pathname === "/") mount();
+    if (mutations.some((m) => m.attributeName === "data-theme") && header.classList.contains("full_page")) mount();
   });
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 }
 
 // ---- lazyload (only images explicitly using data-lazy-src) ----
 function initLazyload() {
-  if (!G.islazyload) return;
+  if (!G.islazyload || !document.querySelector("img[data-lazy-src]")) return;
   const init = () => {
     const LL = (window as any).LazyLoad;
     if (typeof LL !== "function") return;
@@ -407,6 +375,10 @@ function init() {
   }
   initDark();
   initToggles();
+  document.getElementById("random-hover")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    anzhiyu.toRandomPost();
+  });
   initDiytitle();
   initSubtitleType();
   initProgressiveHeader();
@@ -414,7 +386,14 @@ function init() {
   initHighlightTools();
   initFooterRuntime();
   updateScroll();
-  window.addEventListener("scroll", updateScroll, { passive: true });
+  let scrollQueued = false;
+  const scheduleScroll = () => {
+    if (scrollQueued) return;
+    scrollQueued = true;
+    requestAnimationFrame(() => { scrollQueued = false; updateScroll(); });
+  };
+  window.addEventListener("scroll", scheduleScroll, { passive: true });
+  window.addEventListener("resize", scheduleScroll);
 
   // #page-name shows current section title
   const pageName = document.getElementById("page-name");

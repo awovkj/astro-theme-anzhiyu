@@ -123,7 +123,7 @@ katex:
 # --------------------------------------
 
 # Favicon（网站图标）
-favicon: /favicon.ico
+favicon: /img/favicon.ico
 
 # Avatar (头像)
 avatar:
@@ -153,8 +153,8 @@ cover:
 
 # Replace Broken Images (替换无法显示的图片)
 error_img:
-  flink: /img/friend_404.gif
-  post_page: /img/404.jpg
+  flink: /img/placeholder.svg
+  post_page: /img/placeholder.svg
 
 # A simple 404 page
 error_404:

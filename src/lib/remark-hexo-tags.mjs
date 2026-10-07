@@ -83,7 +83,7 @@ const INLINE_HANDLERS = {
     const inside = (link.startsWith("/") && !link.startsWith("//")) || imgUrl === "true";
     let iconUrl = "";
     if (imgUrl && imgUrl !== "true") iconUrl = imgUrl;
-    else if (inside) iconUrl = "/favicon.ico";
+    else if (inside) iconUrl = `${(process.env.BASE_PATH || "/").replace(/\/$/, "")}/img/favicon.ico`;
     else {
       try {
         iconUrl = `${new URL(link).origin}/favicon.ico`;

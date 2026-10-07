@@ -13,7 +13,7 @@ astro-theme-anzhiyu/
 ├─ tsconfig.json
 ├─ scripts/
 │  ├─ compile-css.cjs          # 把原主题 Stylus 编译为 theme.css（带 hexo-config 求值）
-│  ├─ check-css-drift.cjs      # 防漂移：theme.css 是否与 stylus/ 源一致
+│  ├─ check-dist.mjs          # 验证产物中的资源、搜索路由和 SEO 元数据
 │  ├─ check-font-coverage.cjs  # 字体覆盖：页面用到的字是否都被子集字体收录
 │  ├─ subset-font.cjs          # 字体子集化（源字体放 scripts/fonts/，不入库）
 │  └─ subset-extra.py          # 生成 unicode-range 分流的补字字体
@@ -32,7 +32,7 @@ astro-theme-anzhiyu/
 │  │  ├─ collections.ts        # 内容集合数据层（posts/tags/categories）
 │  │  └─ globalConfig.ts       # GLOBAL_CONFIG / GLOBAL_CONFIG_SITE
 │  ├─ components/              # 与原 include 一一对应的组件
-│  │  ├─ Head / Header / Footer / Sidebar / Aside / Rightside
+│  │  ├─ Head / Header / Footer / Sidebar / Aside
 │  │  ├─ Music / Loading / Popup / TopHome / PostCard
 │  ├─ layouts/
 │  │  └─ Base.astro            # 对应原 layout.pug
@@ -61,30 +61,43 @@ astro-theme-anzhiyu/
 需要 Node.js 22.12.0 或更高版本。
 
 ```bash
-npm install
+npm ci
 npm run dev        # 本地预览 http://localhost:4321
 npm run build      # 产物输出到 dist/
 npm run check      # Astro / TypeScript 静态检查
 npm run check:css  # 防漂移：theme.css 是否与 stylus/ 源一致
 npm run check:font # 字体覆盖：页面用到的字是否都被子集字体收录（需 fontTools）
-npm run validate   # check + check:css + 生产构建
+npm run test       # Node 内置测试：URL、内容排序、日期、只读 CSS 校验
+npm run check:dist # 构建后检查本地资源、搜索路由、SEO
+npm run validate   # test + check + check:css + build + check:dist
 npm run preview    # 预览构建产物
 ```
 
 ## 部署前必改
 
-**域名**是唯一硬性要求，两处要一致，否则 sitemap / RSS / robots.txt 以及文章内的绝对链接都会指向 `example.com`：
+**域名**统一在 `astro.config.mjs` 的 `site` 配置，不再需要同步修改第二个回退值。也可在构建进程中设置 `SITE_URL` 环境变量；子路径部署设置 `BASE_PATH`（例如 `/blog/`）。这些变量在构建时生效，更改后必须重新构建。
 
-1. `astro.config.mjs` 的 `site` → 你的域名（含协议，结尾不带 `/`）。
-2. `src/lib/site.ts` 的 `url` 回退值 → 同一个域名。
+PowerShell 示例：
 
-此外 `src/lib/site.ts` 里的 `title` / `author` / `avatar` 也可以按需替换（模板默认保留主题作者 `awovkj` 的信息与示例头像）。改完跑一次 `npm run validate` 确认产物正确。
+```powershell
+$env:SITE_URL = "https://your-domain.com"
+$env:BASE_PATH = "/blog/"  # 根目录部署时省略
+npm run validate
+```
+
+Bash / CI 示例：
+
+```bash
+SITE_URL=https://your-domain.com BASE_PATH=/blog/ npm run validate
+```
+
+`src/lib/site.ts` 里的 `title` / `author` / `avatar` / `index_per_page` / `date_format` 可以按需替换（模板默认保留主题作者 `awovkj` 的信息与示例头像）。改完跑一次 `npm run validate` 确认产物正确。
 
 ## 配置
 
 - **主题外观**：编辑 `src/config/_config.yml`（与原 Hexo 主题 `_config.yml` 完全一致，已整体复制）。
 - **站点信息**：编辑 `src/lib/site.ts`（标题、作者、语言、头像、favicon、目录名等）。
-- **图标字体**：已自托管在 `public/iconfont/`（安知鱼官方图标字体的本地副本，同源加载，无第三方 CDN）；也可在 `src/config/_config.yml` 的 `theme.asset.ali_iconfont_css` 指定自己的链接。
+- **图标字体**：已自托管在 `public/iconfont/`（安知鱼官方图标字体的本地副本，同源加载，无第三方 CDN）；如需替换为自己的图标字体地址，修改 `src/components/Head.astro` 中的 `iconfontCss`。
 - **写文章**：在 `src/content/posts/` 新建 `.md`（可从 `src/content/templates/post.md` 复制模板），front-matter 支持 `title / slug / date / updated / tags / categories / keywords / cover / description / comments / top / top_group_index / swiper_index / hide / public` 等。
   - `slug`：**可选**，显式指定 URL 路径。不填时沿用 Astro 从文件名生成的 id —— 中文会被保留，但**括号等标点会被吃掉、拉丁字母会被小写化**（`学习日记-1(命令执行篇).md` → `/posts/学习日记-1命令执行篇/`）。需要干净 URL 就显式写。
   - `top`：置顶优先级，**数字越大越靠前**。
@@ -101,7 +114,7 @@ npm run preview    # 预览构建产物
 | `layout/includes/header/*` | `src/components/Header.astro` |
 | `layout/includes/sidebar.pug` | `src/components/Sidebar.astro` |
 | `layout/includes/widget/*` | `src/components/Aside.astro` |
-| `layout/includes/rightside.pug` | `src/components/Rightside.astro` |
+| `layout/includes/rightside.pug` | 导航栏及 `src/scripts/theme.ts` |
 | `layout/includes/mixins/post-ui.pug` | `src/components/PostCard.astro` |
 | `scripts/helpers/*.js` | `src/lib/helpers.ts` |
 | `source/css/*.styl` | `src/styles/theme.css`（编译产物） |
@@ -113,7 +126,7 @@ npm run preview    # 预览构建产物
 **简化（与原 Hexo 运行时耦合，未 1:1 移植）**：
 
 - 原主题依赖 pjax 做无刷新跳转，本静态版改为原生链接；客户端交互统一收敛到 `src/scripts/theme.ts`（暗色切换、滚动进度、返回顶部、侧栏/抽屉开关等）。
-- 第三方功能（Algolia / 本地搜索、评论系统 Valine/Waline/Twikoo、音乐播放器 Meting、统计 busuanzi 等）保留了对应 DOM 与配置位，但需自行接入对应前端脚本/后端服务才会真正工作。
+- 本地搜索已接入 `search.json`，支持失败重试与键盘操作；Twikoo/Waline 已保留初始化逻辑，但必须提供有效的服务配置。Algolia、Valine、播放器和其他原主题扩展并非全部完整移植，不能仅打开 YAML 开关就假定功能已接通。
 - 文章字数/阅读时长、TOC 由 `src/lib/helpers.ts` 在构建期计算，逻辑与原 helper 一致。
 
 ## 重新编译样式
@@ -128,8 +141,16 @@ npm run compile:css
 
 注：`css_prefix` 已置为 `false`——nib 不再注入 `-o-`/`-ms-`/`-moz-` 化石前缀（现代浏览器均不需要），如需恢复改为 `true` 再编译。
 
-> **改了 stylus/ 或影响样式的配置，一定要重跑 `npm run compile:css`。** `theme.css` 是入库的编译产物，忘了重编译时页面会静默沿用旧样式 —— `npm run check:css` 就是拦这个的：它会重新编译一次并逐字节比对，不一致就报错（并就地写好新产物，直接 `git add` 即可）。`npm run validate` 已经包含这一步。
+> **改了 stylus/ 或影响样式的配置，一定要重跑 `npm run compile:css`。** `theme.css` 是入库的编译产物，忘了重编译时页面会静默沿用旧样式 —— `npm run check:css` 就是拦这个的：它会重新编译一次并逐字节比对，不一致就报错；校验过程**只读，不会覆盖源码或产物**，需手动运行 `npm run compile:css` 后再提交。`npm run validate` 已经包含这一步。
 
 ## 许可
 
 遵循原主题许可（GPL-3.0）。
+
+## 质量检查与升级记录
+
+- `npm run validate` 是本地及 CI 的统一质量入口；GitHub Actions 在 Node.js 22 / 24 下验证，并追加 `/blog/` 子路径构建检查。
+- `npm run check:css` 只读检测样式漂移；修改 Stylus 后用 `npm run compile:css` 显式生成产物。
+- `npm run check:dist` 会检查 HTML/CSS 的本地图片、字体、脚本和样式是否存在，并核对搜索链接与 SEO 元数据，不访问外部图床。
+- `npm run check:font` 仍是可选项：需要 Python `fonttools` / `brotli`，以及重新子集化时使用的原始字体。缺少工具会提示跳过，不能视作字体覆盖验证通过。
+- 本轮问题清单、优化取舍和后续建议见 [项目优化审查](docs/optimization-review.md)。

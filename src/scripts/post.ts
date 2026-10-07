@@ -1,13 +1,9 @@
 // Keep this side-effect script a module so its local `anzhiyu` binding does not
 // collide with the site-wide runtime when TypeScript checks all source files.
-export {};
+import { legacyCopy, loadScript } from "./runtime";
 
-const anzhiyu: any = (window as any).anzhiyu || {};
+const anzhiyu: any = (window as any).anzhiyu ||= {};
 
-function legacyCopy(): boolean {
-  const command = Reflect.get(document, "execCommand");
-  return typeof command === "function" && command.call(document, "copy");
-}
 
 function getEleTop(ele: HTMLElement): number {
   let actualTop = ele.offsetTop;
@@ -109,15 +105,7 @@ function initPostTools() {
     render();
     return;
   }
-  const load = (src: string) =>
-    new Promise<void>((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = src;
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error("qrcode load fail"));
-      document.head.appendChild(s);
-    });
-  load(`${import.meta.env.BASE_URL}js/vendor/qrcode.min.js`).then(render).catch(() => {});
+  loadScript(`${import.meta.env.BASE_URL}js/vendor/qrcode.min.js`).then(render).catch(() => {});
 }
 
 function initTocScrollspy() {

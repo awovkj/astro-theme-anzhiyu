@@ -133,7 +133,7 @@ const authorStatus = t.author_status || {};
                 )}
                 <div class="nn-latest-info">
                   <div class="nn-latest-title">{title}</div>
-                  <time class="nn-latest-date" datetime={date_xml(time)} title={_p("post.created") + " " + fullDate(time)}>{date(time, (site as any).date_format || "YYYY-MM-DD")}</time>
+                  <time class="nn-latest-date" datetime={date_xml(time)} title={_p("post.created") + " " + fullDate(time)}>{date(time, site.date_format)}</time>
                 </div>
               </a>
             );

@@ -48,7 +48,7 @@ const next_text =
 
 {
   total > 1 && (
-    <nav id="pagination">
+    <nav id="pagination" aria-label="分页导航">
       <div class="pagination">
         {current > 1 && (
           <a class="extend prev" rel="prev" href={link(current - 1)} set:html={prev_text} />
@@ -57,7 +57,7 @@ const next_text =
           it.type === "space" ? (
             <span class="space">&hellip;</span>
           ) : it.type === "current" ? (
-            <span class="page-number current">{it.num}</span>
+            <span class="page-number current" aria-current="page">{it.num}</span>
           ) : (
             <a class="page-number" href={link(it.num as number)}>
               {it.num}

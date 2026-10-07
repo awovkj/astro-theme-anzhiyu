@@ -13,12 +13,8 @@ import { glob } from "astro/loaders";
  * zod 默认对 null 报错，这里把 null / 空字符串归一为 undefined，
  * 让 optional / default 正常接管。
  *
- * 注：这里用 `z.ZodTypeAny`，astro check 会提示它已弃用（1 条 hint）。
- * 换成文档建议的 `z.ZodType` 反而更糟 —— 在当前 zod 4.5 里它同样是 deprecated
- * 别名，会让每个调用点都报一次弃用告警（17 条）。等 zod 给出真正可用的基类
- * 再迁移，现在保持原样。
  */
-const blank = <T extends z.ZodTypeAny>(schema: T) =>
+const blank = <T extends z.core.$ZodType>(schema: T) =>
   z.preprocess((v) => (v === null || v === "" ? undefined : v), schema);
 
 const posts = defineCollection({
@@ -38,8 +34,8 @@ const posts = defineCollection({
     slug: blank(z.string().optional().default("")),
     date: z.coerce.date(),
     updated: blank(z.coerce.date().optional()),
-    tags: blank(z.array(z.string()).default([])),
-    categories: blank(z.array(z.string()).default([])),
+    tags: blank(z.array(z.string()).default([]).transform((values) => [...new Set(values)])),
+    categories: blank(z.array(z.string()).default([]).transform((values) => [...new Set(values)])),
     // cover can be a URL/path, false (no cover), or omitted/blank (random cover).
     cover: blank(z.union([z.string(), z.boolean()]).optional()),
     description: blank(z.string().optional()),

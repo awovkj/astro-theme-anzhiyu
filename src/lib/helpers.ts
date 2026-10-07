@@ -1,3 +1,4 @@
+import { withBase } from "./urls";
 import { site } from "./site";
 import { theme } from "./theme";
 import { _p } from "./i18n";
@@ -7,14 +8,7 @@ import type { PostItem, TagInfo, CategoryInfo, ArchiveItem } from "./collections
  *  URL helpers (mirror Hexo's url_for / is_current)
  * ------------------------------------------------------------------ */
 export function url_for(p?: string | null): string {
-  if (!p) return site.root;
-  // Leave absolute/protocol URLs and document-local anchors untouched.  The
-  // generic URI-scheme branch is deliberately restricted so a configured or
-  // content-provided `javascript:` URL cannot become an executable href.
-  if (/^\/\//.test(p) || /^(?:https?:|mailto:|tel:|ftp:)/i.test(p) || /^data:image\//i.test(p) || p.startsWith("#")) return p;
-  if (/^[a-z][a-z\d+.-]*:/i.test(p)) return "#";
-  if (p.startsWith("/")) return (site.root.replace(/\/$/, "") + p).replace(/\/\//g, "/");
-  return (site.root.replace(/\/$/, "") + "/" + p.replace(/^\//, "")).replace(/\/\//g, "/");
+  return withBase(p, site.root);
 }
 
 /** Escape text interpolated into helper-generated HTML fragments. */

@@ -9,13 +9,13 @@ export const site = {
   subtitle: "生活明朗，万物可爱",
   author: "awovkj",
   email: "",
-  // Keep URL generation in sync with astro.config.mjs. This also makes all
-  // url_for() callers work when Astro's `site` / `base` is changed for
-  // subpath hosting.
-  // ⚠️ 必须与 astro.config.mjs 的 `site` 保持一致，否则 sitemap / RSS /
-  //    文章内绝对链接都会指向错误域名。
-  url: (import.meta.env.SITE || "https://example.com").replace(/\/$/, ""),
-  root: import.meta.env.BASE_URL || "/",
+  // Domain is configured only in astro.config.mjs (or SITE_URL at build time).
+  url: import.meta.env.SITE.replace(/\/$/, ""),
+  root: import.meta.env.BASE_URL,
+  index_per_page: 10,
+  date_format: "YYYY-MM-DD",
+  keywords: [] as string[],
+  copyright: "",
   language: "zh-CN",
   description: "一款基于 Hexo 修改的安知鱼主题，已重构为 Astro。",
   // Directory names (kept identical to Hexo defaults so URLs match).
@@ -25,7 +25,7 @@ export const site = {
   // Author avatar / favicon (mirrors theme.avatar / theme.favicon).
   // 使用者换成自己的图片即可 —— 建议放到 public/img/ 下用本地路径，避免依赖第三方 CDN。
   avatar: "https://bu.dusays.com/2023/04/27/64496e511b09c.jpg",
-  favicon: "/favicon.ico",
+  favicon: "/img/favicon.ico",
 };
 
 export type SiteConfig = typeof site;

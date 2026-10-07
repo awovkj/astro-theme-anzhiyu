@@ -1,6 +1,6 @@
 import rss from "@astrojs/rss";
 import type { APIContext } from "astro";
-import { loadData, sortedPosts } from "../lib/collections";
+import { loadData, chronologicalPosts } from "../lib/collections";
 import { site } from "../lib/site";
 import { url_for } from "../lib/helpers";
 
@@ -15,7 +15,7 @@ import { url_for } from "../lib/helpers";
  */
 export async function GET(context: APIContext) {
   const data = await loadData();
-  const posts = sortedPosts(data.posts);
+  const posts = chronologicalPosts(data.posts);
 
   return rss({
     title: site.title,

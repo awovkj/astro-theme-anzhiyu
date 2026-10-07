@@ -1,8 +1,7 @@
 @font-face {
   font-family: "anzhiyufont"; /* Project id 2508400 */
-  src: url("./font_2508400_l1fgdgl4fns.woff2") format("woff2"),
-    url("./font_2508400_l1fgdgl4fns.woff") format("woff"),
-    url("./font_2508400_l1fgdgl4fns.ttf") format("truetype");
+  src: url("./font_2508400_l1fgdgl4fns.woff2") format("woff2");
+  font-display: block;
 }
 
 .anzhiyufont {

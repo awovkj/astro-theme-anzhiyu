@@ -7,12 +7,14 @@
     "dev": "astro dev",
     "build": "astro build",
     "check": "astro check",
-    "check:css": "node scripts/check-css-drift.cjs",
+    "check:css": "node scripts/compile-css.cjs --check",
     "check:font": "node scripts/check-font-coverage.cjs",
-    "validate": "npm run check && npm run check:css && npm run build",
+    "validate": "npm run test && npm run check && npm run check:css && npm run build && npm run check:dist",
     "preview": "astro preview",
     "compile:css": "node scripts/compile-css.cjs",
-    "subset:font": "node scripts/subset-font.cjs"
+    "subset:font": "node scripts/subset-font.cjs",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "check:dist": "node scripts/check-dist.mjs"
   },
   "keywords": [
     "astro",
@@ -26,11 +28,11 @@
     "npm": ">=9.6.5"
   },
   "dependencies": {
-    "@astrojs/markdown-remark": "^7.2.4",
+    "@astrojs/markdown-remark": "^7.3.1",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.2.6",
-    "js-yaml": "^4.3.1"
+    "astro": "^7.3.5",
+    "js-yaml": "^4.3.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
