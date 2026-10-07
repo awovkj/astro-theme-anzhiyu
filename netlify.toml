@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22.12.0"
+
+# 产物是目录格式（/posts/xxx/index.html），保留尾斜杠。
+# Netlify 默认开启 pretty_urls，会把 /posts/xxx/ 301 到 /posts/xxx，
+# 与 Cloudflare / Vercel / EdgeOne 的行为不一致，这里关掉。
+[build.processing.html]
+  pretty_urls = false
+
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

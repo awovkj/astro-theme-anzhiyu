@@ -38,6 +38,11 @@ scripts/fonts/
 .dev.vars
 .dev.vars.*
 
+# 托管平台 CLI 产物
+.vercel/
+.netlify/
+.edgeone/
+
 # 系统隐藏文件
 .DS_Store
 Thumbs.db
